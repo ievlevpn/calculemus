@@ -23,6 +23,7 @@ assumptionsOf::usage = "assumptionsOf[d] returns the assumptions of derivation d
 stepsOf::usage       = "stepsOf[d] returns the list of step records of d.";
 verifiedQ::usage     = "verifiedQ[d] is True iff every step of d verified (status Verified, NumericOnly, or Asserted).";
 caveats::usage       = "caveats[d] (or caveats[] for the current computation) lists the steps the result rests on WITHOUT proof - the Asserted (taken-as-given) and Unverified steps - to print at the end.";
+installAssistance::usage = "installAssistance[] adds notebook input assistance (argument-value completions and the Esc |> Esc alias for the >op> operator). Runs automatically when a notebook front-end is present.";
 Derivation::usage    = "Derivation[<|...|>] is an immutable derivation value. Build with derive/step; inspect with the accessors.";
 Yields::usage        = "Yields[expr, relation] (or Yields[expr, relation, note]) is returned by a transform to assert that it changes the relation to the given one. A transform that returns a bare expression asserts equality.";
 
@@ -163,6 +164,7 @@ Get[FileNameJoin[{$dir, "..", "Source", "Bounds.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Inequalities.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "TwoSided.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Syntax.wl"}]];
+Get[FileNameJoin[{$dir, "..", "Source", "Assistance.wl"}]];
 
 End[];
 
