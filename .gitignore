@@ -3,3 +3,6 @@
 .wolframscript/
 # macOS
 .DS_Store
+# MkDocs
+/site/
+.cache/

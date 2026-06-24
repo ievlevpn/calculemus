@@ -1,0 +1,75 @@
+site_name: FormalCalc
+site_description: Verifiable, step-by-step formal manipulation in Mathematica
+docs_dir: docs
+
+theme:
+  name: material
+  icon:
+    logo: material/function-variant
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.tracking
+    - navigation.top
+    - navigation.indexes
+    - content.code.copy
+    - content.code.annotate
+    - search.suggest
+    - search.highlight
+    - toc.follow
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.arithmatex:
+      generic: true
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Concepts:
+      - The derivation chain: concepts/derivations.md
+      - Performing & verifying: concepts/performing-and-verifying.md
+      - How verification works: concepts/verification.md
+      - Core vs domain packs: concepts/domain-packs.md
+  - Reference:
+      - Core: reference/core.md
+      - General algebra: reference/algebra.md
+      - Series & asymptotics: reference/series.md
+      - Matrix & non-commutative: reference/matrix.md
+      - Integrals: reference/integrals.md
+      - Sums: reference/sums.md
+      - Bounds & inequalities: reference/bounds.md
+      - Gaussian pack (domain): reference/gaussian.md
+  - Examples: examples.md
