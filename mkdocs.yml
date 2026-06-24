@@ -73,6 +73,7 @@ nav:
       - Core vs domain packs: concepts/domain-packs.md
   - Reference:
       - Core: reference/core.md
+      - Addressing subexpressions: reference/subexpressions.md
       - General algebra: reference/algebra.md
       - Series & asymptotics: reference/series.md
       - Matrix & non-commutative: reference/matrix.md

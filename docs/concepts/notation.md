@@ -54,6 +54,13 @@ Operations read like mathematics:
 | `let[w, expr]` | name a subexpression `w := expr` |
 | `amgm[a,b]`, `triangleIneq[a,b]`, `young[a,b,p,q]`, `bernoulli[x,r]`, `expBound[x]`, `logBound[x]` | standard inequalities |
 
+## Pointing at subexpressions
+
+Operate on a piece the way you *see* it — `on[integrand, Expand]`,
+`on[argOf[Exp], completeSquare[x]]`, `on[term[2], Factor]`, `on[_^2, Expand]` —
+and `partOf` / `highlight` to confirm what you're addressing. See
+[Addressing subexpressions](../reference/subexpressions.md).
+
 ## Held integrals and sums
 
 Write held (unevaluated) integrals and sums with the constructors — short forms of
