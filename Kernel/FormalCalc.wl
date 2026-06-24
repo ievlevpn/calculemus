@@ -38,6 +38,20 @@ certify::usage = "certify[before, after, relation, assumptions] checks whether '
 at::usage      = "at[expr, pos, f] applies f to the subexpression(s) at position pos. at[expr, patt, f] applies f to every subexpression matching pattern patt.";
 rewrite::usage = "rewrite[rule] is the equality transform expr |-> (expr /. rule).";
 
+(* ---- Subexpression addressing (§0.1) ---- *)
+on::usage        = "on[where, op] applies transform op to the subexpression(s) at locator `where` (verified). E.g. on[integrand, expand], on[argOf[Exp], completeSquare[x]], on[term[2], factor], on[_^2, op].";
+partOf::usage    = "partOf[expr, where] returns the subexpression(s) addressed by locator `where` (to confirm what you are pointing at).";
+highlight::usage = "highlight[expr, where] displays expr with the addressed subexpression(s) boxed.";
+integrand::usage = "integrand: locator for the body of a held integral.";
+summand::usage   = "summand: locator for the body of a held sum.";
+argOf::usage     = "argOf[h]: locator for the argument of h. argOf[Exp] is the exponent of e^x, argOf[Sqrt] the radicand, argOf[Log] inside the log, etc.";
+term::usage      = "term[n]: locator for the n-th additive term (firstTerm, lastTerm also).";
+factor::usage    = "factor[n]: locator for the n-th multiplicative factor.";
+firstTerm::usage = "firstTerm / lastTerm: locators for the first / last additive term.";
+lastTerm::usage  = "lastTerm: locator for the last additive term.";
+numerator::usage = "numerator / denominator: locators for the numerator / denominator.";
+denominator::usage = "denominator: locator for the denominator.";
+
 (* ---- General expression algebra (Layer 1, §1-§2) ---- *)
 completeSquare::usage = "completeSquare[x] is the scalar transform completing a x^2 + b x + c into a (x + b/(2a))^2 + (c - b^2/(4a)).";
 abbreviate::usage     = "abbreviate[w, expr] is the transform naming a subexpression: it replaces expr by w and records the definition w := expr (expanded transparently during verification).";
@@ -134,6 +148,7 @@ Begin["`Private`"];
 $dir = DirectoryName[$InputFileName];
 Get[FileNameJoin[{$dir, "..", "Source", "Core.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Expr.wl"}]];
+Get[FileNameJoin[{$dir, "..", "Source", "Subexpr.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Series.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Matrix.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Integral.wl"}]];
