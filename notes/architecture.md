@@ -103,7 +103,7 @@ roadmap, not empty stubs.
 | 1 | `Source/Bounds.wl` | §9 bounds: sign certs, drop-term, bound-in-place | **built (slice)** |
 | 1 | `Source/Series.wl` | §4 graded truncation, multivariate o/O, formal-series arithmetic | **built** (`~` verification wired into `certify`) |
 | 1 | `Source/Matrix.wl` | §3 noncommutative / matrix + §4.6 graded Neumann inverse (NCAlgebra backend) | **built** (random-matrix verification) |
-| 1 | `Source/Sums.wl` | §5 reindex / split / Fubini / Iverson | planned |
+| 1 | `Source/Sums.wl` | §5 reindex / split / Fubini / linearity | **built** (Activate + numeric verification) |
 | 1 | `Source/Integral.wl` | §6 Inactive linearity / change-of-var / IBP / split / Fubini | **built** (numeric-quadrature verification) |
 | 1 | `Source/Expr.wl` | §1 generic surgery, §2 commutative (mostly native wrappers) | planned |
 | 1 | `Source/Equation.wl` | two-sided (in)equation manipulation (§9.2 "both sides") | planned |
@@ -153,5 +153,5 @@ and inequalities.
 2. ~~`Matrix.wl` — NC Neumann inverse + random-matrix verification~~ **done** — wraps NCAlgebra (`tp`/`aj`/`inv`/`**`), adds graded `neumannInverse`/`expandInverse`, and verifies NC `=` steps (random matrices) and graded NC `~` steps (residual order probe). Reproduces the matrix `Σ⁻¹(t)` Neumann expansion.
    - *Done within §3:* symmetric/antisymmetric split (`symPart`/`antiPart`), and quadratic forms under side relations (`A₁w = 0`) — `applyRel` + verification that samples random matrices/vectors *satisfying* the relations (matrix `M·P` with `P` projecting off the annihilated vectors). The `wᵀ(A₁+A₁ᵀ)w = 0` vanishing is reproduced and verified.
    - *Next within §3:* combine Neumann + relations + prefactor algebra into the full "exponential prefactor" derivation from the paper; matrix (Loewner) ordering for NC inequalities.
-3. **`Integral.wl`** (§6) **done** — `Inactive[Integrate]` rewrites (linearity, change-of-var, IBP, split-domain, sum↔integral swap), verified by numeric quadrature (`Inactive[Integrate]`→`NIntegrate` on random params). **`Sums.wl`** (§5) next: reindex/shift/split/Fubini/Iverson on `Inactive[Sum]`.
-4. **`Gaussian.wl`** (§8): fold recurring Gaussian moves + named inequalities (Slepian / Borell-TIS / Piterbarg) into operators.
+3. ~~`Integral.wl` (§6) + `Sums.wl` (§5)~~ **done** — `Inactive[Integrate]`/`Inactive[Sum]` rewrites (linearity, change-of-var, IBP, split, reindex, Fubini, sum↔integral swap), verified by numeric quadrature / `Activate`+numeric.
+4. **`Gaussian.wl`** (§8): fold recurring Gaussian moves (log-density / complete-the-square / covariance algebra) + named inequalities (Slepian / Borell-TIS / Piterbarg) into operators. *Next.*

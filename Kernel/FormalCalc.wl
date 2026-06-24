@@ -68,6 +68,13 @@ ibp::usage       = "ibp[u, v] is the integration-by-parts transform: the integra
 splitDomain::usage = "splitDomain[c] splits a held definite integral at the interior point c.";
 swapSumIntegral::usage = "swapSumIntegral interchanges a held Inactive[Sum] and Inactive[Integrate] (either order).";
 
+(* ---- Formal sums (Layer 1, §5) ---- *)
+sum::usage          = "sum[f, {k, a, b}] is the held sum Inactive[Sum][f, {k, a, b}].";
+sumLinearity::usage = "sumLinearity is the transform that splits held sums over addends and pulls out factors free of the index.";
+shiftIndex::usage   = "shiftIndex[c] reindexes a held sum k -> k-c, shifting the bounds by c.";
+splitSum::usage     = "splitSum[m] splits a held sum's range at the interior point m.";
+swapSum::usage      = "swapSum interchanges the order of two nested held sums (Fubini), assuming independent bounds.";
+
 (* ---- Bounds (Layer 1, §9) ---- *)
 signOf::usage   = "signOf[expr] or signOf[expr, assumptions] returns Positive, Negative, NonNegative, NonPositive, or Unknown.";
 dropTerm::usage = "dropTerm[term] is the transform that drops a nonnegative term, asserting a GreaterEqual step (current >= current - term).";
@@ -81,6 +88,7 @@ Get[FileNameJoin[{$dir, "..", "Source", "Core.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Series.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Matrix.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Integral.wl"}]];
+Get[FileNameJoin[{$dir, "..", "Source", "Sums.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Bounds.wl"}]];
 
 End[];
