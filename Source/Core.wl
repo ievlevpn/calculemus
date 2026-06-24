@@ -181,30 +181,54 @@ result[Derivation[a_]]        := If[a["steps"] === {}, a["start"], Last[a["steps
 assumptionsOf[Derivation[a_]] := a["assumptions"];
 stepsOf[Derivation[a_]]       := a["steps"];
 relationOf[Derivation[a_]]    := Fold[composeRelation, Equal, #["relation"] & /@ a["steps"]];
-verifiedQ[Derivation[a_]]     := AllTrue[a["steps"], MemberQ[{"Verified", "NumericOnly"}, #["cert"]["status"]] &];
+verifiedQ[Derivation[a_]]     := AllTrue[a["steps"], MemberQ[{"Verified", "NumericOnly", "Asserted"}, #["cert"]["status"]] &];
 
-normalizeYield[Yields[e_, r_, note_]] := {e, r, note};
-normalizeYield[Yields[e_, r_]]        := {e, r, ""};
-normalizeYield[e_]                    := {e, Equal, ""};
+(* a transform returns a bare expression (equality), or Yields[expr, relation, note,
+   meta], where meta may carry "conditions" (side-assumptions to accumulate) and
+   "assumed" -> True (taken as given -> status Asserted). *)
+normalizeYield[Yields[e_, r_, note_, meta_Association]] := {e, r, note, meta};
+normalizeYield[Yields[e_, r_, note_]] := {e, r, note, <||>};
+normalizeYield[Yields[e_, r_]]        := {e, r, "", <||>};
+normalizeYield[e_]                    := {e, Equal, "", <||>};
+
+(* conjoin assumptions, flattening And and dropping True *)
+conjoinAsm[a_, b_] := With[
+  {parts = DeleteCases[DeleteDuplicates@Flatten[{a, b} /. And -> List], True]},
+  Which[parts === {}, True, Length[parts] == 1, First[parts], True, And @@ parts]];
+
+(* an "obvious contradiction": provably unsatisfiable over the reals *)
+contradictoryQ[True] := False;
+contradictoryQ[asm_] := TrueQ@Quiet@TimeConstrained[Reduce[asm, Reals] === False, 3, False];
 
 step::refuted = "Step `1` failed verification (status: Refuted). Recorded anyway.";
+step::contradiction = "Step `1` introduces assumptions `2` that contradict those already in force; rejected.";
 
 stepCore[d : Derivation[a_], f_, noteOpt_] := Module[
-  {cur = result[d], asm = assumptionsOf[d], new, rel, ynote, note, cert, rec,
+  {cur = result[d], asm = assumptionsOf[d], new, rel, ynote, meta, note, cert, rec,
    grading = Lookup[a, "grading", None], order = Lookup[a, "order", None],
-   relations = Lookup[a, "relations", {}]},
+   relations = Lookup[a, "relations", {}], conds, assumed, newAsm, n = Length[a["steps"]] + 1},
   (* a transform may be a plain expr->result function, or WithContext[(expr,ctx)->result]
      to read Grading/GradingOrder/Relations/Assumptions set once on the derivation. *)
-  {new, rel, ynote} = normalizeYield[
+  {new, rel, ynote, meta} = normalizeYield[
     If[Head[f] === WithContext,
       First[f][cur, <|"grading" -> grading, "order" -> order,
                       "relations" -> relations, "assumptions" -> asm|>],
       f[cur]]];
   note = If[noteOpt === Automatic, ynote, noteOpt];
-  cert = certify[cur, new, rel, asm, grading, order, relations];
-  If[cert["status"] === "Refuted", Message[step::refuted, Length[a["steps"]] + 1]];
+  conds = normalizeAsm[Lookup[meta, "conditions", True]];
+  assumed = TrueQ@Lookup[meta, "assumed", False];
+  newAsm = conjoinAsm[asm, conds];
+  (* accumulate side-assumptions; reject on an obvious contradiction *)
+  If[conds =!= True && contradictoryQ[newAsm],
+    Message[step::contradiction, n, conds];
+    cert = <|"relation" -> rel, "symbolic" -> False, "numeric" -> $noNumeric, "status" -> "Refuted"|>;
+    rec = <|"result" -> new, "relation" -> rel, "note" -> note <> " [contradictory assumptions]", "cert" -> cert|>;
+    Return[Derivation[<|a, "steps" -> Append[a["steps"], rec]|>]]];
+  cert = certify[cur, new, rel, newAsm, grading, order, relations];
+  If[assumed, cert = <|cert, "status" -> "Asserted"|>];   (* taken as given *)
+  If[cert["status"] === "Refuted", Message[step::refuted, n]];
   rec = <|"result" -> new, "relation" -> rel, "note" -> note, "cert" -> cert|>;
-  Derivation[<|a, "steps" -> Append[a["steps"], rec]|>]
+  Derivation[<|a, "assumptions" -> newAsm, "steps" -> Append[a["steps"], rec]|>]
 ];
 
 step[d_Derivation, f_]               := stepCore[d, f, Automatic];
@@ -217,10 +241,12 @@ step[f_, note_String] /; Head[f] =!= Derivation := Function[d, step[d, f, note]]
 (* ============================================================ *)
 
 $statusColor = <|"Verified" -> Darker[Green, 0.2], "NumericOnly" -> RGBColor[0., 0.55, 0.5],
+                 "Asserted" -> RGBColor[0.5, 0.33, 0.7],
                  "Refuted" -> Red, "Unverified" -> Gray|>;
 $statusGlyph = <|"Verified" -> "\[Checkmark]", "NumericOnly" -> "\[Checkmark]",
-                 "Refuted" -> "\[Times]", "Unverified" -> "?"|>;
+                 "Asserted" -> "\[RightTee]", "Refuted" -> "\[Times]", "Unverified" -> "?"|>;
 $statusTip   = <|"Verified" -> "verified symbolically", "NumericOnly" -> "verified numerically (probe)",
+                 "Asserted" -> "asserted \[Dash] taken as given (by hypothesis)",
                  "Refuted" -> "REFUTED \[Dash] the asserted relation does not hold",
                  "Unverified" -> "not verified"|>;
 
@@ -230,12 +256,13 @@ statusBadge[st_] := Tooltip[
 
 overallStatus[d_] := Which[
   AnyTrue[stepsOf[d], #["cert"]["status"] === "Refuted" &], "Refuted",
+  AnyTrue[stepsOf[d], #["cert"]["status"] === "Asserted" &] && verifiedQ[d], "Asserted",
   verifiedQ[d], "Verified", True, "Unverified"];
 
 verifiedSummary[d_] := With[{st = overallStatus[d]},
   Style[Row[{Lookup[$statusGlyph, st], " ",
              Switch[st, "Refuted", "refuted step", "Verified", "all steps verified",
-                        _, "unverified step(s)"]}],
+                        "Asserted", "verified, uses assumed step(s)", _, "unverified step(s)"]}],
         Lookup[$statusColor, st], Bold]];
 
 (* the full annotated proof chain *)
@@ -264,13 +291,18 @@ Derivation /: MakeBoxes[d : Derivation[a_Association], fmt : (StandardForm | Tra
     {BoxForm`SummaryItem[{"result: ", Row[{a["start"], " ",
         Style[relationLabel[relationOf[d]], Bold, GrayLevel[0.45]], " ", result[d]}]}],
      BoxForm`SummaryItem[{"status: ", verifiedSummary[d]}]},
-    (* expanded: the full chain *)
-    {BoxForm`SummaryItem[{"steps:  ", Length[a["steps"]]}],
-     chainGrid[a]},
+    (* expanded: the full chain + accumulated assumptions *)
+    Join[
+      {BoxForm`SummaryItem[{"steps:  ", Length[a["steps"]]}]},
+      If[assumptionsOf[d] === True, {},
+         {BoxForm`SummaryItem[{"assumptions:  ", assumptionsOf[d]}]}],
+      {chainGrid[a]}],
     fmt, "Interpretable" -> Automatic];
 
 (* terminal / OutputForm fallback: a clean one-liner (Print uses Format) *)
-Derivation /: Format[d : Derivation[a_Association], form : (OutputForm | TextForm)] :=
+derivLine[d_Derivation] := With[{a = First[d]},
   Row[{"Derivation[", Length[a["steps"]], " step(s): ", a["start"], " ",
        relationLabel[relationOf[d]], " ", result[d], "  ",
-       Lookup[$statusGlyph, overallStatus[d]], "]"}];
+       Lookup[$statusGlyph, overallStatus[d]], "]"}]];
+Derivation /: Format[d_Derivation, OutputForm] := derivLine[d];
+Derivation /: Format[d_Derivation, TextForm]   := derivLine[d];

@@ -88,6 +88,13 @@ dropTerm::usage = "dropTerm[term] is the transform that drops a nonnegative term
 boundBy::usage  = "boundBy[newExpr] (or boundBy[newExpr, relation]) is the transform that replaces the current expression by newExpr, asserting the given relation (default LessEqual). The verifier checks the claim.";
 boundSub::usage = "boundSub[rule] (or boundSub[rule, relation]) bounds a subterm via rule, asserting the given relation (default LessEqual) for the whole expression.";
 
+(* ---- Standard & user-defined inequalities (Layer 1, §9.5) ---- *)
+registerInequality::usage = "registerInequality[name, applyFn, relation, condFn, opts] registers an inequality: applyFn[args] gives the rewrite rule, condFn[args] the side-conditions. Option \"Assumed\"->True marks it taken-as-given (status Asserted).";
+defineInequality::usage   = "defineInequality[name, applyFn, relation, condFn] registers a USER inequality taken as given (status Asserted), with side-conditions accumulated.";
+useIneq::usage            = "useIneq[name, {args}] is the transform applying the registered inequality `name` to `args`: it rewrites the subterm, asserts the relation, and accumulates the side-conditions into the derivation's assumptions.";
+assume::usage             = "assume[lhs -> rhs, relation, conditions] applies an ad-hoc bound taken as given (status Asserted), accumulating conditions. Inline alternative to registering.";
+inequalities::usage       = "inequalities[] lists the registered inequalities (name, relation, description).";
+
 Begin["`Private`"];
 
 $dir = DirectoryName[$InputFileName];
@@ -98,6 +105,7 @@ Get[FileNameJoin[{$dir, "..", "Source", "Matrix.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Integral.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Sums.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Bounds.wl"}]];
+Get[FileNameJoin[{$dir, "..", "Source", "Inequalities.wl"}]];
 
 End[];
 
