@@ -99,28 +99,25 @@ intParams[e_] := Complement[
 intSymZero[before_, after_, asm_] := TrueQ@Quiet@TimeConstrained[
   Simplify[Activate[before] - Activate[after], asm] === 0, 5, False];
 
-(* numeric: random params, Inactive[Integrate] -> NIntegrate, compare *)
-integralProbe[before_, after_, asm_, trials_: 6] := Module[{params, res, tol = 10.^-5},
+(* numeric: random params, Inactive[Integrate] -> NIntegrate, check `before rel after` *)
+integralProbe[before_, after_, rel_, asm_, trials_: 6] := Module[{params, res, tol = 10.^-5},
   params = Union[intParams[before], intParams[after]];
   res = Table[
     Module[{sub = (# -> RandomReal[{0.4, 2.2}]) & /@ params, bn, an},
       Quiet@Check[
         bn = N[(before /. sub) /. Inactive[Integrate] -> NIntegrate];
         an = N[(after /. sub) /. Inactive[Integrate] -> NIntegrate];
-        If[NumericQ[bn] && NumericQ[an], Abs[an - bn] <= tol (1 + Abs[bn]), $bad],
-        $bad]],
+        numericRelHolds[rel, bn, an, tol], $bad]],
     {trials}];
-  res = DeleteCases[res, $bad];
+  res = DeleteCases[res, $bad | Indeterminate];
   Which[res === {}, Unknown, MemberQ[res, False], False, True, True]
 ];
 
-intCertify[before_, after_, Equal, asm_] := Module[{sz, pr, status},
-  sz = intSymZero[before, after, asm];
-  pr = integralProbe[before, after, asm];
+(* equality is also checked symbolically (Activate); inequalities by the probe. *)
+intCertify[before_, after_, rel_, asm_] := Module[{sz, pr, status},
+  sz = rel === Equal && intSymZero[before, after, asm];
+  pr = integralProbe[before, after, rel, asm];
   status = Which[pr === False, "Refuted", sz, "Verified", pr === True, "NumericOnly", True, "Unverified"];
-  <|"relation" -> Equal, "symbolic" -> If[sz, True, Unknown],
+  <|"relation" -> rel, "symbolic" -> If[sz, True, Unknown],
     "numeric" -> <|"verdict" -> pr|>, "status" -> status|>
 ];
-intCertify[before_, after_, rel_, asm_] :=
-  <|"relation" -> rel, "symbolic" -> Unknown, "numeric" -> <|"verdict" -> Unknown|>,
-    "status" -> "Unverified"|>;

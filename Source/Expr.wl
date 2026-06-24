@@ -7,6 +7,9 @@
    The definition w -> expr is recorded on the derivation; verification expands it,
    so steps stay readable in w while the real math is what gets checked. *)
 abbreviate[w_, expr_] := Function[cur,
+  (* a name for a non-commutative expression must itself be non-commutative,
+     or substituting it would silently collapse the operator structure. *)
+  If[TrueQ@ncExprQ[expr], Quiet@SetNonCommutative[w]];
   Yields[cur /. expr -> w, Equal,
     "let " <> ToString[w] <> " := " <> ToString[expr, InputForm], <|"define" -> (w -> expr)|>]];
 

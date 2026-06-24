@@ -58,7 +58,7 @@ sumBoundSyms[e_] := DeleteDuplicates@Cases[
 
 (* numeric: test at several concrete dimensions (bound symbols -> small integers,
    so Sum_{i=1}^n becomes a finite sum) and random reals for the other params. *)
-sumProbe[before_, after_, asm_, trials_: 8] := Module[{bsyms, vparams, res, tol = 10.^-6},
+sumProbe[before_, after_, rel_, asm_, trials_: 8] := Module[{bsyms, vparams, res, tol = 10.^-6},
   bsyms = sumBoundSyms[{before, after}];
   vparams = Complement[Union[sumParams[before], sumParams[after]], bsyms];
   res = Table[
@@ -66,20 +66,16 @@ sumProbe[before_, after_, asm_, trials_: 8] := Module[{bsyms, vparams, res, tol 
       sub = Join[(# -> RandomInteger[{2, 6}]) & /@ bsyms, (# -> RandomReal[{0.4, 2.2}]) & /@ vparams];
       Quiet@Check[
         bn = N[Activate[before] /. sub]; an = N[Activate[after] /. sub];
-        If[NumericQ[bn] && NumericQ[an], Abs[an - bn] <= tol (1 + Abs[bn]), $bad],
-        $bad]],
+        numericRelHolds[rel, bn, an, tol], $bad]],
     {trials}];
-  res = DeleteCases[res, $bad];
+  res = DeleteCases[res, $bad | Indeterminate];
   Which[res === {}, Unknown, MemberQ[res, False], False, True, True]
 ];
 
-sumCertify[before_, after_, Equal, asm_] := Module[{sz, pr, status},
-  sz = sumSymZero[before, after, asm];
-  pr = sumProbe[before, after, asm];
+sumCertify[before_, after_, rel_, asm_] := Module[{sz, pr, status},
+  sz = rel === Equal && sumSymZero[before, after, asm];
+  pr = sumProbe[before, after, rel, asm];
   status = Which[pr === False, "Refuted", sz, "Verified", pr === True, "NumericOnly", True, "Unverified"];
-  <|"relation" -> Equal, "symbolic" -> If[sz, True, Unknown],
+  <|"relation" -> rel, "symbolic" -> If[sz, True, Unknown],
     "numeric" -> <|"verdict" -> pr|>, "status" -> status|>
 ];
-sumCertify[before_, after_, rel_, asm_] :=
-  <|"relation" -> rel, "symbolic" -> Unknown, "numeric" -> <|"verdict" -> Unknown|>,
-    "status" -> "Unverified"|>;
