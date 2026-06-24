@@ -22,6 +22,15 @@ ncDeclareVec[vs__] := (SetNonCommutative[vs];
   $ncSyms = Union[$ncSyms, {vs}]; $ncVecs = Union[$ncVecs, {vs}];);
 vecQ[v_] := MemberQ[$ncVecs, v];
 
+$ncSym = {};   (* symbolic matrices known to be symmetric (sampled SPD) *)
+SetAttributes[ncDeclareSym, HoldAll];
+ncDeclareSym[as__] := (SetNonCommutative[as];
+  $ncSyms = Union[$ncSyms, {as}]; $ncSym = Union[$ncSym, {as}];);
+symQ[a_] := MemberQ[$ncSym, a];
+
+(* a symmetric positive-definite random matrix (symmetric, invertible) *)
+randSPD[dim_] := With[{R = RandomReal[{-1, 1}, {dim, dim}]}, R . Transpose[R] + 0.1 IdentityMatrix[dim]];
+
 (* §3.3 symmetric / antisymmetric split *)
 symPart[a_]  := (a + tp[a])/2;
 antiPart[a_] := (a - tp[a])/2;
@@ -52,8 +61,10 @@ toNum[expr_, dim_] := Module[{r},
 vecNorm[z_] := If[ArrayQ[z], Norm[Flatten[z]], Abs[z]];
 
 (* random numeric substitution: matrices -> dim x dim, vectors -> dim x 1 *)
-ncRandomRules[syms_, dim_] :=
-  (# -> If[vecQ[#], RandomReal[{-1, 1}, {dim, 1}], RandomReal[{-1, 1}, {dim, dim}]]) & /@ syms;
+ncRandomRules[syms_, dim_] := (# -> Which[
+    vecQ[#], RandomReal[{-1, 1}, {dim, 1}],
+    symQ[#], randSPD[dim],
+    True, RandomReal[{-1, 1}, {dim, dim}]]) & /@ syms;
 
 (* random substitution that SATISFIES relations of the form  mat ** vec -> 0:
    draw the vectors, then set each constrained matrix to M . P where P projects
@@ -65,8 +76,9 @@ ncConstrainedRules[syms_, relations_, dim_] := Module[{vecVals, kill, matFor},
   vecVals = (# -> RandomReal[{-1, 1}, {dim, 1}]) & /@ Select[syms, vecQ];
   kill = Cases[relations, HoldPattern[Rule[NonCommutativeMultiply[m_, v_], 0]] /; vecQ[v] :> {m, v}];
   matFor[m_] := Module[{vs = Cases[kill, {m, v_} :> (v /. vecVals)]},
-    If[vs === {}, RandomReal[{-1, 1}, {dim, dim}],
-       RandomReal[{-1, 1}, {dim, dim}] . orthProjector[vs, dim]]];
+    Which[vs =!= {}, RandomReal[{-1, 1}, {dim, dim}] . orthProjector[vs, dim],
+          symQ[m], randSPD[dim],
+          True, RandomReal[{-1, 1}, {dim, dim}]]];
   Join[vecVals, (# -> matFor[#]) & /@ Select[syms, ! vecQ[#] &]]
 ];
 

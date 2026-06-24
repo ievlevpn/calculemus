@@ -108,7 +108,7 @@ roadmap, not empty stubs.
 | 1 | `Source/Expr.wl` | §1 generic surgery, §2 commutative (mostly native wrappers) | planned |
 | 1 | `Source/Equation.wl` | two-sided (in)equation manipulation (§9.2 "both sides") | planned |
 | 2 | `Source/Core.wl` | `derive` / `step` / accessors / rendering | **built** |
-| domain | `Source/Gaussian.wl` | §8 Gaussian log-density, covariance, Slepian/Borell-TIS/Piterbarg | planned |
+| domain | `Source/Gaussian.wl` | §8 log-density exponent, complete-the-square (scalar + matrix), Gaussian integral | **built** (symmetric/SPD verification) |
 | — | `Kernel/FormalCalc.wl` | master loader + public usages | **built** |
 | — | `Tests/*.wl` | assert-based self-checks per module | **built (core)** |
 
@@ -154,4 +154,5 @@ and inequalities.
    - *Done within §3:* symmetric/antisymmetric split (`symPart`/`antiPart`), and quadratic forms under side relations (`A₁w = 0`) — `applyRel` + verification that samples random matrices/vectors *satisfying* the relations (matrix `M·P` with `P` projecting off the annihilated vectors). The `wᵀ(A₁+A₁ᵀ)w = 0` vanishing is reproduced and verified.
    - *Next within §3:* combine Neumann + relations + prefactor algebra into the full "exponential prefactor" derivation from the paper; matrix (Loewner) ordering for NC inequalities.
 3. ~~`Integral.wl` (§6) + `Sums.wl` (§5)~~ **done** — `Inactive[Integrate]`/`Inactive[Sum]` rewrites (linearity, change-of-var, IBP, split, reindex, Fubini, sum↔integral swap), verified by numeric quadrature / `Activate`+numeric.
-4. **`Gaussian.wl`** (§8): fold recurring Gaussian moves (log-density / complete-the-square / covariance algebra) + named inequalities (Slepian / Borell-TIS / Piterbarg) into operators. *Next.*
+4. ~~`Gaussian.wl` (§8) — log-density exponent, complete-the-square (scalar + matrix/exponent mean-shift), Gaussian integral normalization~~ **done**; verified via symmetric/SPD random sampling (`ncDeclareSym`).
+   - *Not yet:* named inequalities (Slepian / Borell-TIS / Piterbarg). These are *asserted theorems*, not numerically checkable in our probe framework — they need a distinct "asserted-with-provenance" step status (a §0.5 feature), not algebraic verification. Deferred deliberately rather than faked as "Verified".

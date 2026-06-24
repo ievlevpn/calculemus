@@ -54,6 +54,7 @@ ncDeclare::usage      = "ncDeclare[a, b, ...] marks symbols as non-commutative m
 ncDeclareVec::usage   = "ncDeclareVec[v, ...] marks symbols as (column) vectors, so random-matrix verification gives them shape dim x 1 (and tp[v] shape 1 x dim).";
 neumannInverse::usage = "neumannInverse[s, e, n] is the order-n Neumann truncation of inv[s - e] = Sum_{k=0}^n (inv[s]**e)^k ** inv[s], treating e as the small (weight-1) generator.";
 expandInverse::usage  = "expandInverse[s, e, n] is the transform replacing inv[s-e] by its order-n Neumann truncation, asserting a ~ step (auto-verified via random-matrix order probe when the derivation carries Grading -> {e -> 1}, GradingOrder -> n).";
+ncDeclareSym::usage   = "ncDeclareSym[A, ...] marks symbols as symmetric matrices, sampled as symmetric positive-definite in verification (e.g. covariances).";
 symPart::usage        = "symPart[a] = (a + tp[a])/2, the symmetric part.";
 antiPart::usage       = "antiPart[a] = (a - tp[a])/2, the antisymmetric part.";
 applyRel::usage       = "applyRel[rules] is the transform that applies NC side-relations (e.g. {A ** w -> 0}) via NCReplaceAll. Verified by random matrices/vectors that satisfy the derivation's Relations.";
@@ -75,6 +76,14 @@ shiftIndex::usage   = "shiftIndex[c] reindexes a held sum k -> k-c, shifting the
 splitSum::usage     = "splitSum[m] splits a held sum's range at the interior point m.";
 swapSum::usage      = "swapSum interchanges the order of two nested held sums (Fubini), assuming independent bounds.";
 
+(* ---- Gaussian domain pack (§8) ---- *)
+gaussExp::usage            = "gaussExp[x, s] = -1/2 tp[x] ** inv[s] ** x, the centered Gaussian log-density exponent.";
+prefactorExponent::usage   = "prefactorExponent[x1, s1, x2, s2] = gaussExp[x1,s1] - gaussExp[x2,s2], the exponent of a Gaussian log-density ratio.";
+completeSquare::usage      = "completeSquare[x] is the scalar transform completing a x^2 + b x + c into a (x + b/(2a))^2 + (c - b^2/(4a)).";
+gaussQuadForm::usage       = "gaussQuadForm[A, c, x] = tp[x]**A**x + tp[x]**c + tp[c]**x.";
+gaussCompleteSquare::usage = "gaussCompleteSquare[A, c, x] = (x + A^-1 c)^T A (x + A^-1 c) - c^T A^-1 c, the completed square of gaussQuadForm for symmetric A.";
+gaussianIntegral::usage    = "gaussianIntegral is the transform normalizing Int_{-inf}^{inf} Exp[quadratic in x] dx to its closed form.";
+
 (* ---- Bounds (Layer 1, §9) ---- *)
 signOf::usage   = "signOf[expr] or signOf[expr, assumptions] returns Positive, Negative, NonNegative, NonPositive, or Unknown.";
 dropTerm::usage = "dropTerm[term] is the transform that drops a nonnegative term, asserting a GreaterEqual step (current >= current - term).";
@@ -89,6 +98,7 @@ Get[FileNameJoin[{$dir, "..", "Source", "Series.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Matrix.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Integral.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Sums.wl"}]];
+Get[FileNameJoin[{$dir, "..", "Source", "Gaussian.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Bounds.wl"}]];
 
 End[];
