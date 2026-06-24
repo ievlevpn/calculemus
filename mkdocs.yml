@@ -77,6 +77,7 @@ nav:
       - Matrix & non-commutative: reference/matrix.md
       - Integrals: reference/integrals.md
       - Sums: reference/sums.md
-      - Bounds & inequalities: reference/bounds.md
+      - Bounds: reference/bounds.md
+      - Inequalities: reference/inequalities.md
       - Gaussian pack (domain): reference/gaussian.md
   - Examples: examples.md

@@ -62,3 +62,8 @@ Bound a subterm via `rule`, asserting `relation` for the whole expression (defau
     `dropTerm` is for **nonnegative** terms (giving `≥`). To loosen with a
     nonpositive term or any other directed bound, use `boundBy` / `boundSub` and
     state the relation — the verifier keeps you honest.
+
+!!! tip "Named inequalities"
+    For standard inequalities (triangle, AM–GM, Young, `1+x ≤ eˣ`, …) and your own
+    assumed bounds — applied as directional rewrites with **accumulated
+    side-conditions** — see [Inequalities](inequalities.md).
