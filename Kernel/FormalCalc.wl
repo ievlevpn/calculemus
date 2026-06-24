@@ -40,6 +40,10 @@ rewrite::usage = "rewrite[rule] is the equality transform expr |-> (expr /. rule
 
 (* ---- General expression algebra (Layer 1, §1-§2) ---- *)
 completeSquare::usage = "completeSquare[x] is the scalar transform completing a x^2 + b x + c into a (x + b/(2a))^2 + (c - b^2/(4a)).";
+abbreviate::usage     = "abbreviate[w, expr] is the transform naming a subexpression: it replaces expr by w and records the definition w := expr (expanded transparently during verification).";
+restore::usage        = "restore[w] replaces the abbreviation w by its recorded definition; restoreAll expands every abbreviation.";
+restoreAll::usage     = "restoreAll is the transform expanding every recorded abbreviation back to its definition.";
+definitionsOf::usage  = "definitionsOf[d] returns the abbreviation definitions (w -> expr) recorded on derivation d.";
 
 (* ---- Series & graded asymptotics (Layer 1, §4) ---- *)
 Grading::usage        = "Grading is a derive option: a list {g -> w, ...} (or {g, ...} for weight 1) assigning small generators their weights. Enables verification of ~ steps.";

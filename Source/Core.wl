@@ -174,11 +174,13 @@ derive[expr_, OptionsPattern[]] := Derivation[<|
   "grading" -> OptionValue[Grading],
   "order" -> OptionValue[GradingOrder],
   "relations" -> OptionValue[Relations],
+  "defs" -> {},
   "steps" -> {}
 |>];
 
 result[Derivation[a_]]        := If[a["steps"] === {}, a["start"], Last[a["steps"]]["result"]];
 assumptionsOf[Derivation[a_]] := a["assumptions"];
+definitionsOf[Derivation[a_]] := Lookup[a, "defs", {}];
 stepsOf[Derivation[a_]]       := a["steps"];
 relationOf[Derivation[a_]]    := Fold[composeRelation, Equal, #["relation"] & /@ a["steps"]];
 verifiedQ[Derivation[a_]]     := AllTrue[a["steps"], MemberQ[{"Verified", "NumericOnly", "Asserted"}, #["cert"]["status"]] &];
@@ -206,29 +208,33 @@ step::contradiction = "Step `1` introduces assumptions `2` that contradict those
 stepCore[d : Derivation[a_], f_, noteOpt_] := Module[
   {cur = result[d], asm = assumptionsOf[d], new, rel, ynote, meta, note, cert, rec,
    grading = Lookup[a, "grading", None], order = Lookup[a, "order", None],
-   relations = Lookup[a, "relations", {}], conds, assumed, newAsm, n = Length[a["steps"]] + 1},
+   relations = Lookup[a, "relations", {}], defs = Lookup[a, "defs", {}],
+   conds, assumed, newAsm, defn, newDefs, n = Length[a["steps"]] + 1},
   (* a transform may be a plain expr->result function, or WithContext[(expr,ctx)->result]
-     to read Grading/GradingOrder/Relations/Assumptions set once on the derivation. *)
+     to read Grading/GradingOrder/Relations/Assumptions/Defs set once on the derivation. *)
   {new, rel, ynote, meta} = normalizeYield[
     If[Head[f] === WithContext,
-      First[f][cur, <|"grading" -> grading, "order" -> order,
-                      "relations" -> relations, "assumptions" -> asm|>],
+      First[f][cur, <|"grading" -> grading, "order" -> order, "relations" -> relations,
+                      "assumptions" -> asm, "defs" -> defs|>],
       f[cur]]];
   note = If[noteOpt === Automatic, ynote, noteOpt];
   conds = normalizeAsm[Lookup[meta, "conditions", True]];
   assumed = TrueQ@Lookup[meta, "assumed", False];
   newAsm = conjoinAsm[asm, conds];
+  defn = Lookup[meta, "define", Nothing];          (* abbreviation w -> expr, if any *)
+  newDefs = If[defn === Nothing, defs, Append[defs, defn]];
   (* accumulate side-assumptions; reject on an obvious contradiction *)
   If[conds =!= True && contradictoryQ[newAsm],
     Message[step::contradiction, n, conds];
     cert = <|"relation" -> rel, "symbolic" -> False, "numeric" -> $noNumeric, "status" -> "Refuted"|>;
     rec = <|"result" -> new, "relation" -> rel, "note" -> note <> " [contradictory assumptions]", "cert" -> cert|>;
     Return[Derivation[<|a, "steps" -> Append[a["steps"], rec]|>]]];
-  cert = certify[cur, new, rel, newAsm, grading, order, relations];
+  (* verify on the DEFINITION-EXPANDED expressions, so abbreviations are transparent *)
+  cert = certify[cur //. newDefs, new //. newDefs, rel, newAsm, grading, order, relations];
   If[assumed, cert = <|cert, "status" -> "Asserted"|>];   (* taken as given *)
   If[cert["status"] === "Refuted", Message[step::refuted, n]];
   rec = <|"result" -> new, "relation" -> rel, "note" -> note, "cert" -> cert|>;
-  Derivation[<|a, "assumptions" -> newAsm, "steps" -> Append[a["steps"], rec]|>]
+  Derivation[<|a, "assumptions" -> newAsm, "defs" -> newDefs, "steps" -> Append[a["steps"], rec]|>]
 ];
 
 step[d_Derivation, f_]               := stepCore[d, f, Automatic];
