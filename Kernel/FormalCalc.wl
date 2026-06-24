@@ -21,7 +21,8 @@ result::usage        = "result[d] is the current (last) expression of derivation
 relationOf::usage    = "relationOf[d] is the relation between the start and the current expression of d (transitive composition of all step relations).";
 assumptionsOf::usage = "assumptionsOf[d] returns the assumptions of derivation d.";
 stepsOf::usage       = "stepsOf[d] returns the list of step records of d.";
-verifiedQ::usage     = "verifiedQ[d] is True iff every step of d verified (status Verified or NumericOnly).";
+verifiedQ::usage     = "verifiedQ[d] is True iff every step of d verified (status Verified, NumericOnly, or Asserted).";
+caveats::usage       = "caveats[d] (or caveats[] for the current computation) lists the steps the result rests on WITHOUT proof - the Asserted (taken-as-given) and Unverified steps - to print at the end.";
 Derivation::usage    = "Derivation[<|...|>] is an immutable derivation value. Build with derive/step; inspect with the accessors.";
 Yields::usage        = "Yields[expr, relation] (or Yields[expr, relation, note]) is returned by a transform to assert that it changes the relation to the given one. A transform that returns a bare expression asserts equality.";
 
@@ -115,6 +116,7 @@ registerInequality::usage = "registerInequality[name, applyFn, relation, condFn,
 defineInequality::usage   = "defineInequality[name, applyFn, relation, condFn] registers a USER inequality taken as given (status Asserted), with side-conditions accumulated.";
 useIneq::usage            = "useIneq[name, {args}] is the transform applying the registered inequality `name` to `args`: it rewrites the subterm, asserts the relation, and accumulates the side-conditions into the derivation's assumptions.";
 assume::usage             = "assume[lhs -> rhs, relation, conditions] applies an ad-hoc bound taken as given (status Asserted), accumulating conditions. Inline alternative to registering.";
+claim::usage              = "claim[lhs -> rhs] (or claim[value], with an optional relation) makes an UNVERIFIED claim mid-derivation, taken as given (status Asserted). E.g. claim[someIntegral -> 0]. All such claims are collected by caveats[].";
 inequalities::usage       = "inequalities[] lists the registered inequalities (name, relation, description).";
 
 (* ---- Two-sided (in)equations (Layer 1/2, §9.2) ---- *)

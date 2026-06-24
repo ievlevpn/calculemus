@@ -55,4 +55,22 @@ by[let[s, m + n]];
 by[rewrite[s^2 + s -> s (s + 1)]];
 assert[verifiedQ[goal[]], "let verb verified"];
 
+(* ---- claim: an unverified claim mid-derivation, collected by caveats[] ---- *)
+compute[c0 + dint[g[x], {x, -1, 1}]];
+by[claim[dint[g[x], {x, -1, 1}] -> 0], "claim: integral of an odd function vanishes"];
+assert[result[goal[]] === c0, "claim rewrote the integral to 0"];
+assert[stepsOf[goal[]][[-1]]["cert"]["status"] === "Asserted", "claim is Asserted"];
+assert[Head[caveats[]] === Framed, "caveats reports the claim"];
+
+(* ---- an Unverified step is also collected ---- *)
+compute[1/(ss - ee)];
+by[Function[cur, Yields[1/ss + ee/ss^2, AsymEqual]], "asymptotic, no grading -> unverified"];
+assert[stepsOf[goal[]][[-1]]["cert"]["status"] === "Unverified", "unverified step"];
+assert[Head[caveats[]] === Framed, "caveats reports the unverified step"];
+
+(* ---- a fully verified derivation has no caveats ---- *)
+compute[(a + b)^2];
+by[rewrite[(a + b)^2 -> a^2 + 2 a b + b^2]];
+assert[Head[caveats[]] === Style, "no caveats when fully verified"];
+
 Print["ALL TESTS PASSED (", $passed, " assertions)"];

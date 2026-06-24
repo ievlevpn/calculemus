@@ -31,6 +31,7 @@ by[op_, note_ : Automatic] := If[$goalHistory === {},
 
 undo[] := (If[Length[$goalHistory] > 1, $goalHistory = Most[$goalHistory]]; goal[]);
 goal[] := If[$goalHistory === {}, Missing["NoGoal"], Last[$goalHistory]];
+caveats[] := caveats[goal[]];   (* the current computation's unverified claims *)
 
 (* ============================================================ *)
 (* >op> chaining operator (one-cell functional style)           *)

@@ -50,6 +50,15 @@ useIneq[name_String] := useIneq[name, {}];
 assume[rule_Rule, rel_ : LessEqual, conds_ : True] := Function[cur,
   Yields[cur /. rule, rel, "assumed", <|"conditions" -> normalizeAsm[conds], "assumed" -> True|>]];
 
+(* claim : make an UNVERIFIED claim mid-derivation, taken as given (status
+   Asserted; collected by caveats[]). claim[lhs -> rhs] rewrites a piece (e.g.
+   claim[someIntegral -> 0]); claim[value] asserts the whole quantity equals value;
+   a relation may be given. *)
+claim[rule_Rule, rel_ : Equal] := Function[cur,
+  Yields[cur /. rule, rel, "claimed: " <> ToString[rule, InputForm], <|"assumed" -> True|>]];
+claim[expr_, rel_ : Equal] /; Head[expr] =!= Rule := Function[cur,
+  Yields[expr, rel, "claimed (taken as given)", <|"assumed" -> True|>]];
+
 (* ============================================================ *)
 (* Standard general inequalities                                *)
 (* ============================================================ *)

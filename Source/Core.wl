@@ -271,6 +271,26 @@ verifiedSummary[d_] := With[{st = overallStatus[d]},
                         "Asserted", "verified, uses assumed step(s)", _, "unverified step(s)"]}],
         Lookup[$statusColor, st], Bold]];
 
+(* ---- caveats: the steps the result RESTS ON without proof (Asserted/Unverified) ---- *)
+caveatSteps[d_] := Select[stepsOf[d], MemberQ[{"Asserted", "Unverified"}, #["cert"]["status"]] &];
+
+caveatLine[s_] := If[KeyExistsQ[s, "result"],
+  Row[{relationLabel[s["relation"]], "  ", s["result"]}],
+  Row[{s["lhs"], "  ", relationLabel[s["rel"]], "  ", s["rhs"]}]];
+
+caveats[d : (_Derivation | _TwoSided)] := Module[{rows},
+  rows = Cases[MapIndexed[{First[#2], #1} &, stepsOf[d]],
+    {i_, s_} /; MemberQ[{"Asserted", "Unverified"}, s["cert"]["status"]] :>
+      {i, statusBadge[s["cert"]["status"]], caveatLine[s],
+       If[s["note"] === "", "", Style[s["note"], Italic, Gray]]}];
+  If[rows === {}, Style["(no unverified claims \[Dash] fully verified)", Gray, Italic],
+    Framed@Column[{
+      Style["This result rests on the following unverified claim(s):", Bold],
+      Grid[Prepend[rows, Style[#, Bold, Gray] & /@ {"#", "", "claim", "note"}],
+        Alignment -> {{Right, Center, Left, Left}, Baseline}, Spacings -> {2, 0.6},
+        Dividers -> {None, {2 -> GrayLevel[0.8]}}]},
+     FrameStyle -> Lookup[$statusColor, "Asserted"]]]];
+
 (* the full annotated proof chain *)
 chainGrid[a_] := Module[{steps = a["steps"], rows},
   rows = MapIndexed[Function[{s, i},
@@ -294,9 +314,13 @@ Derivation /: MakeBoxes[d : Derivation[a_Association], fmt : (StandardForm | Tra
   BoxForm`ArrangeSummaryBox[
     Derivation, d, derivIcon[d],
     (* collapsed: the essentials *)
-    {BoxForm`SummaryItem[{"result: ", Row[{a["start"], " ",
-        Style[relationLabel[relationOf[d]], Bold, GrayLevel[0.45]], " ", result[d]}]}],
-     BoxForm`SummaryItem[{"status: ", verifiedSummary[d]}]},
+    Join[
+      {BoxForm`SummaryItem[{"result: ", Row[{a["start"], " ",
+          Style[relationLabel[relationOf[d]], Bold, GrayLevel[0.45]], " ", result[d]}]}],
+       BoxForm`SummaryItem[{"status: ", verifiedSummary[d]}]},
+      If[caveatSteps[d] === {}, {},
+        {BoxForm`SummaryItem[{"rests on: ", Style[Row[{Length[caveatSteps[d]],
+           " unverified claim(s)"}], Lookup[$statusColor, "Asserted"], Bold]}]}]],
     (* expanded: the full chain + accumulated assumptions *)
     Join[
       {BoxForm`SummaryItem[{"steps:  ", Length[a["steps"]]}]},
