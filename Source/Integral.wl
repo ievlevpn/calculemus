@@ -60,10 +60,13 @@ gaussianIntegral := Function[cur,
     With[{k = Coefficient[q, x, 2], m = Coefficient[q, x, 1], c0 = Coefficient[q, x, 0]},
       Sqrt[-Pi/k] Exp[c0 - m^2/(4 k)]]];
 
-(* §6.6 swap sum and integral (both directions; bridges to Sums) *)
+(* §6.6 swap sum and integral (both directions; bridges to Sums). A multiplicative
+   factor free of the summation index is carried through (e.g. Int x^3 Sum_k ...). *)
 swapSumIntegral := Function[cur, cur /. {
-  Inactive[Integrate][Inactive[Sum][f_, idx_], dom_] :> Inactive[Sum][Inactive[Integrate][f, dom], idx],
-  Inactive[Sum][Inactive[Integrate][f_, dom_], idx_] :> Inactive[Integrate][Inactive[Sum][f, idx], dom]
+  Inactive[Integrate][rest_. Inactive[Sum][f_, idx_], dom_] /; FreeQ[rest, First[idx]] :>
+    Inactive[Sum][Inactive[Integrate][rest f, dom], idx],
+  Inactive[Sum][rest_. Inactive[Integrate][f_, dom_], idx_] /; FreeQ[rest, First[dom]] :>
+    Inactive[Integrate][Inactive[Sum][rest f, idx], dom]
 }];
 
 (* ============================================================ *)

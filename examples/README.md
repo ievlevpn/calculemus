@@ -25,6 +25,9 @@ top-to-bottom and works in plain `.wl` scripts.
 | `03_gaussian_integral.wl` | complete-the-square, and `∫ e^{−a/2 x² + b x} dx` | You: "complete", "gaussian integral". CAS: produces the completed exponent and the closed form `√(2π/a) e^{b²/2a}`, checked by quadrature. |
 | `04_integration_by_parts.wl` | `∫₀¹ x² eˣ dx` by parts (twice); a change of variables | You: pick `u` / the substitution. CAS: computes the antiderivative `v`, boundary terms, and the new limits — all quadrature-checked. |
 | `05_bound_chain.wl` | a verified `=` then `≥` chain (a lower bound), mirroring the paper's `Ξ ≥ …` move | You: "expand", "drop the ≥0 remainder". CAS: composes the running relation and refuses a wrong-direction (upper-bound) claim. |
+| `06_zeta_integral.wl` | `∫₀^∞ x³/(eˣ−1) dx = π⁴/15` (Bose–Einstein) in three steps | You: the one insight (geometric series). CAS: swaps sum↔integral, integrates each term, sums `6ζ(4)`, verifies each step symbolically. |
+| `07_perturbation_root.wl` | regular perturbation: asymptotic root of `x = 1 + ε x³` (no closed form) | You: the equation + ansatz. CAS: expands, peels off the order equations, solves them; toolkit verifies the residual vanishes to `O(ε²)`. |
+| `08_legendre_generating.wl` | read the Legendre polynomials off `1/√(1−2xt+t²)` | You: "expand to order 3 in t". CAS: the graded expansion of a nested square root; coefficients match `LegendreP[n,x]`. |
 
 ## The pattern
 
