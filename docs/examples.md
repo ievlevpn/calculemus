@@ -16,11 +16,11 @@ The Bose–Einstein integral, `= π⁴/15`. You supply the geometric series; the
 does the rest, verified symbolically.
 
 ```mathematica
-d = derive[Inactive[Integrate][x^3/(E^x - 1), {x, 0, Infinity}], Assumptions -> x > 0];
-d = step[d, rewrite[1/(E^x - 1) -> Inactive[Sum][E^(-k x), {k, 1, Infinity}]], "geometric series"];
-d = step[d, swapSumIntegral, "swap the sum and the integral"];
-d = step[d, Activate,        "integrate each term and sum 6 zeta(4)"];
-result[d]   (* Pi^4/15 *)
+compute[ dint[x^3/(E^x - 1), {x, 0, Infinity}], Assumptions -> x > 0 ]
+by[ rewrite[1/(E^x - 1) -> sum[E^(-k x), {k, 1, Infinity}]], "geometric series" ]
+by[ fubini ]
+by[ evaluate ]
+result[goal[]]   (* Pi^4/15 *)
 ```
 
 ## Perturbation theory — root of `x = 1 + ε x³`

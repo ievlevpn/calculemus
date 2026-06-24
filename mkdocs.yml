@@ -66,6 +66,7 @@ nav:
   - Home: index.md
   - Getting started: getting-started.md
   - Concepts:
+      - Notation & workflow: concepts/notation.md
       - The derivation chain: concepts/derivations.md
       - Performing & verifying: concepts/performing-and-verifying.md
       - How verification works: concepts/verification.md

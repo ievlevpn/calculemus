@@ -20,19 +20,18 @@ A genuinely hard improper integral, in three guided steps — each verified:
 ```mathematica
 Get["/path/to/mathematica-toolkit/Kernel/FormalCalc.wl"];
 
-d = derive[Inactive[Integrate][x^3/(E^x - 1), {x, 0, Infinity}], Assumptions -> x > 0];
-d = step[d, rewrite[1/(E^x - 1) -> Inactive[Sum][E^(-k x), {k, 1, Infinity}]],
-     "geometric series"];
-d = step[d, swapSumIntegral, "swap the sum and the integral"];
-d = step[d, Activate,        "integrate each term and sum 6 zeta(4)"];
+compute[ dint[x^3/(E^x - 1), {x, 0, Infinity}], Assumptions -> x > 0 ]
+by[ rewrite[1/(E^x - 1) -> sum[E^(-k x), {k, 1, Infinity}]], "geometric series" ]
+by[ fubini ]
+by[ evaluate ]
 
-result[d]      (* Pi^4/15 *)
-verifiedQ[d]   (* True    *)
+result[goal[]]     (* Pi^4/15 *)
+verifiedQ[goal[]]  (* True    *)
 ```
 
 You supplied the one insight (the geometric series). The CAS swapped the sum and
-integral, integrated each term, summed the series, and verified each step
-symbolically.
+integral, integrated each term, summed the series, and verified each line —
+written just like a hand derivation, one `by[…]` per line.
 
 ## What makes it different
 
