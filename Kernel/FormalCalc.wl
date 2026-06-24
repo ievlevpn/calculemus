@@ -99,6 +99,17 @@ useIneq::usage            = "useIneq[name, {args}] is the transform applying the
 assume::usage             = "assume[lhs -> rhs, relation, conditions] applies an ad-hoc bound taken as given (status Asserted), accumulating conditions. Inline alternative to registering.";
 inequalities::usage       = "inequalities[] lists the registered inequalities (name, relation, description).";
 
+(* ---- Two-sided (in)equations (Layer 1/2, §9.2) ---- *)
+relate::usage      = "relate[L, R, M] (or relate[L <= M], etc.) starts a two-sided (in)equation L R M. Apply the same operation to both sides with stepBoth.";
+stepBoth::usage    = "stepBoth[obj, op] (or curried stepBoth[op]) applies operation op to BOTH sides of a two-sided relation, verifying the new relation follows from the old. Ops: addBoth, subtractBoth, mulBoth, applyBoth, rewriteBoth.";
+addBoth::usage     = "addBoth[c] adds c to both sides.";
+subtractBoth::usage = "subtractBoth[c] subtracts c from both sides.";
+mulBoth::usage     = "mulBoth[c] multiplies both sides by c, flipping the relation when c is (provably) negative.";
+applyBoth::usage   = "applyBoth[f] applies f to both sides (preserving the relation; assumes f increasing, verified). applyBoth[f, \"Decreasing\"] flips the relation.";
+rewriteBoth::usage = "rewriteBoth[rule] rewrites both sides via rule (relation unchanged).";
+lhsOf::usage       = "lhsOf[obj] / rhsOf[obj] return the current left/right sides of a two-sided relation.";
+rhsOf::usage       = "rhsOf[obj] returns the current right side of a two-sided relation.";
+
 Begin["`Private`"];
 
 $dir = DirectoryName[$InputFileName];
@@ -110,6 +121,7 @@ Get[FileNameJoin[{$dir, "..", "Source", "Integral.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Sums.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Bounds.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Inequalities.wl"}]];
+Get[FileNameJoin[{$dir, "..", "Source", "TwoSided.wl"}]];
 
 End[];
 
