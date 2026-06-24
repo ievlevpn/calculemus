@@ -53,6 +53,10 @@ Operations read like mathematics:
 | `atMost[x]` / `atLeast[x]` | assert `≤ x` / `≥ x` |
 | `let[w, expr]` | name a subexpression `w := expr` |
 | `amgm[a,b]`, `triangleIneq[a,b]`, `young[a,b,p,q]`, `bernoulli[x,r]`, `expBound[x]`, `logBound[x]` | standard inequalities |
+| `claim[lhs -> rhs]`, `claim[value]` | an **unverified** claim taken as given (e.g. `claim[someIntegral -> 0]`) |
+
+`caveats[]` lists everything the current result rests on without proof (the
+`claim`-ed and `Unverified` steps) — print it at the end.
 
 ## Pointing at subexpressions
 

@@ -78,6 +78,30 @@ order as the small generators \(\to 0\).
   `Simplify` proves the equality, backed by a random-parameter numeric check. A
   reindex that forgets to adjust the summand is `Refuted`.
 
+## Unverified claims, and what the result rests on
+
+You don't have to prove everything to keep going. Make a claim **taken as given**
+mid-derivation with `claim`:
+
+```mathematica
+by[ claim[ someIntegral -> 0 ], "odd integrand vanishes" ]   (* status: Asserted *)
+by[ claim[ value ] ]            (* assert the whole quantity equals value *)
+by[ claim[ lhs -> rhs, LessEqual ] ]   (* a claimed inequality *)
+```
+
+A claimed step is recorded as `Asserted` (⊢) — accepted by `verifiedQ`, but never
+pretended to be proven. Every such step, together with any `Unverified` ones, is
+collected by **`caveats`**, so the assumptions behind a long derivation are
+explicit at the end:
+
+```mathematica
+caveats[d]      (* or caveats[] in tactic mode *)
+```
+→ a framed list "This result rests on the following unverified claim(s): …", and
+the summary box shows *rests on: N unverified claim(s)* whenever any exist. This is
+how you keep a multi-page derivation honest: proceed on what you must assume, but
+never lose track of it.
+
 ## Honesty about scope
 
 If the verifier cannot establish a relation, it says `Unverified` rather than
