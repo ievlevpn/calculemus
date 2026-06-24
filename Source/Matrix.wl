@@ -11,10 +11,23 @@
    Times/Plus/Simplify on those symbols still behave commutatively, so the
    scalar modules are unaffected. Loaded inside FormalCalc`Private`. *)
 
-$ncSyms = {};
+$ncSyms = {};   (* all declared NC symbols (matrices + vectors) *)
+$ncVecs = {};   (* the subset that are (column) vectors, for shape-aware probing *)
 
 SetAttributes[ncDeclare, HoldAll];
 ncDeclare[syms__] := (SetNonCommutative[syms]; $ncSyms = Union[$ncSyms, {syms}];);
+
+SetAttributes[ncDeclareVec, HoldAll];
+ncDeclareVec[vs__] := (SetNonCommutative[vs];
+  $ncSyms = Union[$ncSyms, {vs}]; $ncVecs = Union[$ncVecs, {vs}];);
+vecQ[v_] := MemberQ[$ncVecs, v];
+
+(* §3.3 symmetric / antisymmetric split *)
+symPart[a_]  := (a + tp[a])/2;
+antiPart[a_] := (a - tp[a])/2;
+
+(* §3.4 apply linear side relations (NC-aware, handles **-subproducts) *)
+applyRel[rules_] := Function[cur, NCReplaceAll[cur, rules]];
 
 (* an expression is "NC" if it uses **/tp/aj/inv or a declared NC symbol *)
 ncExprQ[e_] := ! FreeQ[e, NonCommutativeMultiply | tp | aj | inv] ||
@@ -34,6 +47,27 @@ toNum[expr_, dim_] := Module[{r},
             aj -> ConjugateTranspose, inv -> Inverse};
   If[Head[r] === Plus, r = Replace[r, c_?NumericQ :> c IdentityMatrix[dim], {1}]];
   r
+];
+
+vecNorm[z_] := If[ArrayQ[z], Norm[Flatten[z]], Abs[z]];
+
+(* random numeric substitution: matrices -> dim x dim, vectors -> dim x 1 *)
+ncRandomRules[syms_, dim_] :=
+  (# -> If[vecQ[#], RandomReal[{-1, 1}, {dim, 1}], RandomReal[{-1, 1}, {dim, dim}]]) & /@ syms;
+
+(* random substitution that SATISFIES relations of the form  mat ** vec -> 0:
+   draw the vectors, then set each constrained matrix to M . P where P projects
+   onto the orthogonal complement of the vectors it must annihilate. *)
+orthProjector[vecs_, dim_] :=
+  With[{V = Transpose[Flatten /@ vecs]}, IdentityMatrix[dim] - V . PseudoInverse[V]];
+
+ncConstrainedRules[syms_, relations_, dim_] := Module[{vecVals, kill, matFor},
+  vecVals = (# -> RandomReal[{-1, 1}, {dim, 1}]) & /@ Select[syms, vecQ];
+  kill = Cases[relations, HoldPattern[Rule[NonCommutativeMultiply[m_, v_], 0]] /; vecQ[v] :> {m, v}];
+  matFor[m_] := Module[{vs = Cases[kill, {m, v_} :> (v /. vecVals)]},
+    If[vs === {}, RandomReal[{-1, 1}, {dim, dim}],
+       RandomReal[{-1, 1}, {dim, dim}] . orthProjector[vs, dim]]];
+  Join[vecVals, (# -> matFor[#]) & /@ Select[syms, ! vecQ[#] &]]
 ];
 
 (* ============================================================ *)
@@ -57,29 +91,30 @@ expandInverse[s_, e_, n_Integer] :=
 (* NC equality: NCExpand for a symbolic zero, random matrices as the probe. *)
 ncSymbolicZeroQ[d_] := If[Quiet[NCExpand[d]] === 0, True, Unknown];
 
-ncMatrixProbe[before_, after_, dim_: 3, trials_: 6] := Module[{syms, res, tol = 10.^-7},
+(* relations = {} -> unconstrained random; else random satisfying the relations *)
+ncMatrixProbe[before_, after_, relations_, dim_: 3, trials_: 6] := Module[{syms, res, tol = 10.^-7},
   syms = ncSymbolsIn[{before, after}];
   res = Table[
-    Module[{rules = (# -> RandomReal[{-1, 1}, {dim, dim}]) & /@ syms, lhs, rhs},
+    Module[{rules = If[relations === {}, ncRandomRules[syms, dim],
+                       ncConstrainedRules[syms, relations, dim]], diff},
       Quiet@Check[
-        lhs = toNum[before, dim] /. rules; rhs = toNum[after, dim] /. rules;
-        If[MatrixQ[lhs] && MatrixQ[rhs] && Dimensions[lhs] === Dimensions[rhs],
-          Norm[lhs - rhs] <= tol (1 + Norm[lhs]), $bad],
+        diff = (toNum[before, dim] /. rules) - (toNum[after, dim] /. rules);
+        vecNorm[diff] <= tol (1 + vecNorm[toNum[before, dim] /. rules]),
         $bad]],
     {trials}];
   res = DeleteCases[res, $bad];
   Which[res === {}, Unknown, MemberQ[res, False], False, True, True]
 ];
 
-ncCertify[before_, after_, Equal, asm_] := Module[{sz, pr, status},
+ncCertify[before_, after_, Equal, asm_, relations_] := Module[{sz, pr, status},
   sz = ncSymbolicZeroQ[before - after];
-  pr = ncMatrixProbe[before, after];
+  pr = ncMatrixProbe[before, after, relations];
   status = Which[pr === False, "Refuted", sz === True, "Verified",
                  pr === True, "NumericOnly", True, "Unverified"];
   <|"relation" -> Equal, "symbolic" -> sz, "numeric" -> <|"verdict" -> pr|>, "status" -> status|>
 ];
 (* matrix (Loewner) ordering not yet supported -> honest Unverified *)
-ncCertify[before_, after_, rel_, asm_] :=
+ncCertify[before_, after_, rel_, asm_, relations_] :=
   <|"relation" -> rel, "symbolic" -> Unknown, "numeric" -> <|"verdict" -> Unknown|>,
     "status" -> "Unverified"|>;
 

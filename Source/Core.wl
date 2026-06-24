@@ -117,11 +117,11 @@ $noNumeric = <|"verdict" -> Unknown, "trials" -> 0, "passed" -> 0|>;
 (* default: not a non-commutative expression. Matrix.wl overrides this. *)
 ncExprQ[_] := False;
 
-certify[before_, after_, rel_, asm_] := certify[before, after, rel, asm, None, None];
+certify[before_, after_, rel_, asm_] := certify[before, after, rel, asm, None, None, {}];
 
 (* graded asymptotic equivalence: before ~ after iff their difference vanishes
    to the given order in the grading (§4.3). Verified via seriesExpand. *)
-certify[before_, after_, AsymEqual, asm_, grading_, order_] := Module[{rem, v},
+certify[before_, after_, AsymEqual, asm_, grading_, order_, relations_: {}] := Module[{rem, v},
   If[ncExprQ[{before, after}], Return[ncAsymCertify[before, after, asm, grading, order]]];
   If[grading === None || order === None,
     Return[<|"relation" -> AsymEqual, "symbolic" -> Unknown,
@@ -132,8 +132,8 @@ certify[before_, after_, AsymEqual, asm_, grading_, order_] := Module[{rem, v},
     "status" -> If[v, "Verified", "Refuted"]|>
 ];
 
-certify[before_, after_, rel_, asm_, grading_, order_] := Module[{sym, num, status},
-  If[ncExprQ[{before, after}], Return[ncCertify[before, after, rel, asm]]];
+certify[before_, after_, rel_, asm_, grading_, order_, relations_: {}] := Module[{sym, num, status},
+  If[ncExprQ[{before, after}], Return[ncCertify[before, after, rel, asm, relations]]];
   sym = symbolicVerdict[before, after, rel, asm];
   num = numericVerdict[before, after, rel, asm];
   status = Which[
@@ -163,12 +163,13 @@ normalizeAsm[True]   := True;
 normalizeAsm[a_List] := And @@ a;
 normalizeAsm[a_]     := a;
 
-Options[derive] = {Assumptions -> True, Grading -> None, GradingOrder -> None};
+Options[derive] = {Assumptions -> True, Grading -> None, GradingOrder -> None, Relations -> {}};
 derive[expr_, OptionsPattern[]] := Derivation[<|
   "start" -> expr,
   "assumptions" -> normalizeAsm[OptionValue[Assumptions]],
   "grading" -> OptionValue[Grading],
   "order" -> OptionValue[GradingOrder],
+  "relations" -> OptionValue[Relations],
   "steps" -> {}
 |>];
 
@@ -186,10 +187,11 @@ step::refuted = "Step `1` failed verification (status: Refuted). Recorded anyway
 
 stepCore[d : Derivation[a_], f_, noteOpt_] := Module[
   {cur = result[d], asm = assumptionsOf[d], new, rel, ynote, note, cert, rec,
-   grading = Lookup[a, "grading", None], order = Lookup[a, "order", None]},
+   grading = Lookup[a, "grading", None], order = Lookup[a, "order", None],
+   relations = Lookup[a, "relations", {}]},
   {new, rel, ynote} = normalizeYield[f[cur]];
   note = If[noteOpt === Automatic, ynote, noteOpt];
-  cert = certify[cur, new, rel, asm, grading, order];
+  cert = certify[cur, new, rel, asm, grading, order, relations];
   If[cert["status"] === "Refuted", Message[step::refuted, Length[a["steps"]] + 1]];
   rec = <|"result" -> new, "relation" -> rel, "note" -> note, "cert" -> cert|>;
   Derivation[<|a, "steps" -> Append[a["steps"], rec]|>]

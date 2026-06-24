@@ -151,6 +151,7 @@ and inequalities.
 
 1. ~~`Series.wl` — graded truncation + multivariate `o`/`O`~~ **done** — `certify` now verifies `~` steps via grading; scalar Neumann expansion reproduces the shadow of Lemma `Sigma-inverse`.
 2. ~~`Matrix.wl` — NC Neumann inverse + random-matrix verification~~ **done** — wraps NCAlgebra (`tp`/`aj`/`inv`/`**`), adds graded `neumannInverse`/`expandInverse`, and verifies NC `=` steps (random matrices) and graded NC `~` steps (residual order probe). Reproduces the matrix `Σ⁻¹(t)` Neumann expansion.
-   - *Next within §3:* quadratic forms under side relations (`A₁w = 0`) with relation-respecting random sampling, symmetric/antisymmetric split, then the full "exponential prefactor" derivation.
+   - *Done within §3:* symmetric/antisymmetric split (`symPart`/`antiPart`), and quadratic forms under side relations (`A₁w = 0`) — `applyRel` + verification that samples random matrices/vectors *satisfying* the relations (matrix `M·P` with `P` projecting off the annihilated vectors). The `wᵀ(A₁+A₁ᵀ)w = 0` vanishing is reproduced and verified.
+   - *Next within §3:* combine Neumann + relations + prefactor algebra into the full "exponential prefactor" derivation from the paper; matrix (Loewner) ordering for NC inequalities.
 3. **`Sums.wl` / `Integral.wl`** (§5/§6): the `Inactive`-rewrite packaging.
 4. **`Gaussian.wl`** (§8): fold recurring Gaussian moves + named inequalities (Slepian / Borell-TIS / Piterbarg) into operators.
