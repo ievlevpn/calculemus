@@ -110,6 +110,24 @@ rewriteBoth::usage = "rewriteBoth[rule] rewrites both sides via rule (relation u
 lhsOf::usage       = "lhsOf[obj] / rhsOf[obj] return the current left/right sides of a two-sided relation.";
 rhsOf::usage       = "rhsOf[obj] returns the current right side of a two-sided relation.";
 
+(* ---- Natural surface syntax (tactic mode + verbs) ---- *)
+compute::usage = "compute[expr] starts an interactive derivation (a 'page'); compute[L <= M] (any relation) starts a two-sided one. Continue with by[...], step back with undo[], inspect with goal[].";
+by::usage      = "by[op] adds a verified line to the current computation by applying op (e.g. by[ibp[x]], by[amgm[a,b]], by[fubini]); by[op, \"note\"] adds a margin note.";
+undo::usage    = "undo[] steps the current computation back one line.";
+goal::usage    = "goal[] is the current state of the interactive computation.";
+atMost::usage  = "atMost[x] asserts the current quantity is <= x (verified). atLeast[x] asserts >= x.";
+atLeast::usage = "atLeast[x] asserts the current quantity is >= x (verified).";
+drop::usage    = "drop[t] drops the nonnegative term t (a >= step). Alias of dropTerm.";
+let::usage     = "let[w, expr] names a subexpression: w := expr. Alias of abbreviate.";
+evaluate::usage = "evaluate activates held integrals/sums to evaluate them. Alias of Activate.";
+fubini::usage  = "fubini interchanges the order of a sum and an integral (or two nested sums).";
+amgm::usage    = "amgm[a, b] applies the AM-GM inequality Sqrt[a b] <= (a+b)/2.";
+triangleIneq::usage = "triangleIneq[a, b] applies the triangle inequality |a+b| <= |a|+|b|.";
+young::usage   = "young[a, b, p, q] applies Young's inequality a b <= a^p/p + b^q/q.";
+bernoulli::usage = "bernoulli[x, r] applies Bernoulli's inequality (1+x)^r >= 1 + r x.";
+expBound::usage = "expBound[x] applies 1 + x <= e^x.";
+logBound::usage = "logBound[x] applies log(1 + x) <= x.";
+
 Begin["`Private`"];
 
 $dir = DirectoryName[$InputFileName];
@@ -122,6 +140,7 @@ Get[FileNameJoin[{$dir, "..", "Source", "Sums.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Bounds.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Inequalities.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "TwoSided.wl"}]];
+Get[FileNameJoin[{$dir, "..", "Source", "Syntax.wl"}]];
 
 End[];
 
