@@ -1,0 +1,17 @@
+/* Pygments tags Mathematica function/symbol names generically (.n), which the
+   default theme leaves uncolored — so Wolfram code looks unhighlighted. Give
+   names a distinct colour in Mathematica blocks only. */
+
+.language-mathematica .n,
+.language-wolfram .n,
+.language-mathematica .nf,
+.language-mathematica .nv {
+  color: #5163c4;          /* indigo, readable on the light code background */
+}
+
+[data-md-color-scheme="slate"] .language-mathematica .n,
+[data-md-color-scheme="slate"] .language-wolfram .n,
+[data-md-color-scheme="slate"] .language-mathematica .nf,
+[data-md-color-scheme="slate"] .language-mathematica .nv {
+  color: #9bb0ff;          /* lighter for dark mode */
+}

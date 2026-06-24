@@ -212,18 +212,65 @@ step[d_Derivation, f_, note_String]  := stepCore[d, f, note];
 step[f_] /; Head[f] =!= Derivation              := Function[d, step[d, f]];
 step[f_, note_String] /; Head[f] =!= Derivation := Function[d, step[d, f, note]];
 
-(* ---- notebook rendering (display only; data via accessors) ---- *)
-statusMark["Verified"]    := "\[Checkmark]";
-statusMark["NumericOnly"] := "\[Checkmark]?";
-statusMark["Refuted"]     := "\[Times]";
-statusMark[_]             := "?";
+(* ============================================================ *)
+(* Display (notebook + terminal). Data is always via accessors. *)
+(* ============================================================ *)
 
-Derivation /: MakeBoxes[Derivation[a_Association], fmt : (StandardForm | TraditionalForm)] :=
-  Module[{rows},
-    rows = Function[s, {relationLabel[s["relation"]], s["result"],
-                        statusMark[s["cert"]["status"]], s["note"]}] /@ a["steps"];
-    ToBoxes[
-      Framed@Grid[Prepend[rows, {"", a["start"], "", ""}],
-        Alignment -> {Left, Center}, Spacings -> {2, 1}],
-      fmt]
-  ];
+$statusColor = <|"Verified" -> Darker[Green, 0.2], "NumericOnly" -> RGBColor[0., 0.55, 0.5],
+                 "Refuted" -> Red, "Unverified" -> Gray|>;
+$statusGlyph = <|"Verified" -> "\[Checkmark]", "NumericOnly" -> "\[Checkmark]",
+                 "Refuted" -> "\[Times]", "Unverified" -> "?"|>;
+$statusTip   = <|"Verified" -> "verified symbolically", "NumericOnly" -> "verified numerically (probe)",
+                 "Refuted" -> "REFUTED \[Dash] the asserted relation does not hold",
+                 "Unverified" -> "not verified"|>;
+
+statusBadge[st_] := Tooltip[
+  Style[Lookup[$statusGlyph, st, "?"], Lookup[$statusColor, st, Gray], Bold],
+  Lookup[$statusTip, st, st]];
+
+overallStatus[d_] := Which[
+  AnyTrue[stepsOf[d], #["cert"]["status"] === "Refuted" &], "Refuted",
+  verifiedQ[d], "Verified", True, "Unverified"];
+
+verifiedSummary[d_] := With[{st = overallStatus[d]},
+  Style[Row[{Lookup[$statusGlyph, st], " ",
+             Switch[st, "Refuted", "refuted step", "Verified", "all steps verified",
+                        _, "unverified step(s)"]}],
+        Lookup[$statusColor, st], Bold]];
+
+(* the full annotated proof chain *)
+chainGrid[a_] := Module[{steps = a["steps"], rows},
+  rows = MapIndexed[Function[{s, i},
+     {Style[First[i], Gray, Tiny],
+      Style[relationLabel[s["relation"]], Bold, GrayLevel[0.45]],
+      Row[{"  ", s["result"]}],
+      statusBadge[s["cert"]["status"]],
+      If[s["note"] === "", "", Style[s["note"], Italic, Gray, Smaller]]}],
+    steps];
+  Grid[
+    Prepend[rows, {"", "", Row[{"  ", a["start"]}], "", Style["(start)", Gray, Smaller]}],
+    Alignment -> {{Right, Center, Left, Center, Left}, Baseline},
+    Dividers -> {None, {2 -> GrayLevel[0.85]}},
+    Spacings -> {1.3, 0.75}]];
+
+derivIcon[d_] := Graphics[
+  {Lookup[$statusColor, overallStatus[d]], Disk[]},
+  ImageSize -> {12, 12}, Background -> None];
+
+Derivation /: MakeBoxes[d : Derivation[a_Association], fmt : (StandardForm | TraditionalForm)] :=
+  BoxForm`ArrangeSummaryBox[
+    Derivation, d, derivIcon[d],
+    (* collapsed: the essentials *)
+    {BoxForm`SummaryItem[{"result: ", Row[{a["start"], " ",
+        Style[relationLabel[relationOf[d]], Bold, GrayLevel[0.45]], " ", result[d]}]}],
+     BoxForm`SummaryItem[{"status: ", verifiedSummary[d]}]},
+    (* expanded: the full chain *)
+    {BoxForm`SummaryItem[{"steps:  ", Length[a["steps"]]}],
+     chainGrid[a]},
+    fmt, "Interpretable" -> Automatic];
+
+(* terminal / OutputForm fallback: a clean one-liner (Print uses Format) *)
+Derivation /: Format[d : Derivation[a_Association], form : (OutputForm | TextForm)] :=
+  Row[{"Derivation[", Length[a["steps"]], " step(s): ", a["start"], " ",
+       relationLabel[relationOf[d]], " ", result[d], "  ",
+       Lookup[$statusGlyph, overallStatus[d]], "]"}];
