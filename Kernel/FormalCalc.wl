@@ -59,6 +59,15 @@ antiPart::usage       = "antiPart[a] = (a - tp[a])/2, the antisymmetric part.";
 applyRel::usage       = "applyRel[rules] is the transform that applies NC side-relations (e.g. {A ** w -> 0}) via NCReplaceAll. Verified by random matrices/vectors that satisfy the derivation's Relations.";
 Relations::usage      = "Relations is a derive option: a list of NC side relations of the form {mat ** vec -> 0, ...}. Verification samples random matrices/vectors satisfying them.";
 
+(* ---- Formal integrals (Layer 1, §6) ---- *)
+dint::usage      = "dint[f, {x, a, b}] is the held definite integral Inactive[Integrate][f, {x, a, b}].";
+iint::usage      = "iint[f, x] is the held indefinite integral Inactive[Integrate][f, x].";
+linearity::usage = "linearity is the transform that splits held integrals over sums and pulls out factors free of the integration variable.";
+changeVar::usage = "changeVar[u, phi, {ua, ub}] is the transform substituting the (single) integration variable x = phi (in u), inserting the Jacobian D[phi, u] and new limits {ua, ub}.";
+ibp::usage       = "ibp[u, v] is the integration-by-parts transform: the integrand must equal u * D[v, x]; yields the boundary term u v | minus the held remainder integral of D[u,x] v.";
+splitDomain::usage = "splitDomain[c] splits a held definite integral at the interior point c.";
+swapSumIntegral::usage = "swapSumIntegral interchanges a held Inactive[Sum] and Inactive[Integrate] (either order).";
+
 (* ---- Bounds (Layer 1, §9) ---- *)
 signOf::usage   = "signOf[expr] or signOf[expr, assumptions] returns Positive, Negative, NonNegative, NonPositive, or Unknown.";
 dropTerm::usage = "dropTerm[term] is the transform that drops a nonnegative term, asserting a GreaterEqual step (current >= current - term).";
@@ -71,6 +80,7 @@ $dir = DirectoryName[$InputFileName];
 Get[FileNameJoin[{$dir, "..", "Source", "Core.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Series.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Matrix.wl"}]];
+Get[FileNameJoin[{$dir, "..", "Source", "Integral.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Bounds.wl"}]];
 
 End[];

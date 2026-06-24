@@ -114,8 +114,9 @@ numericVerdict[before_, after_, rel_, asm_] := Module[
 
 $noNumeric = <|"verdict" -> Unknown, "trials" -> 0, "passed" -> 0|>;
 
-(* default: not a non-commutative expression. Matrix.wl overrides this. *)
-ncExprQ[_] := False;
+(* defaults overridden by Matrix.wl / Integral.wl when those modules load. *)
+ncExprQ[_]  := False;
+intExprQ[_] := False;
 
 certify[before_, after_, rel_, asm_] := certify[before, after, rel, asm, None, None, {}];
 
@@ -134,6 +135,7 @@ certify[before_, after_, AsymEqual, asm_, grading_, order_, relations_: {}] := M
 
 certify[before_, after_, rel_, asm_, grading_, order_, relations_: {}] := Module[{sym, num, status},
   If[ncExprQ[{before, after}], Return[ncCertify[before, after, rel, asm, relations]]];
+  If[intExprQ[{before, after}], Return[intCertify[before, after, rel, asm]]];
   sym = symbolicVerdict[before, after, rel, asm];
   num = numericVerdict[before, after, rel, asm];
   status = Which[

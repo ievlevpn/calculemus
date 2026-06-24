@@ -1,0 +1,87 @@
+(* ::Package:: *)
+
+(* FormalCalc Integral (Layer 1, §6): formal manipulation of integrals held as
+   Inactive[Integrate]. Nothing is evaluated; transforms are pure rewrites.
+   Verification is by numeric quadrature: substitute random values for the free
+   parameters, map Inactive[Integrate] -> NIntegrate, and compare both sides
+   (the integral analog of the random-matrix probe). Loaded in FormalCalc`Private`. *)
+
+(* constructors *)
+dint[f_, {x_, a_, b_}] := Inactive[Integrate][f, {x, a, b}];
+iint[f_, x_]           := Inactive[Integrate][f, x];
+
+(* §6.1 linearity: split over sums, pull out factors free of the integration var *)
+linearity := Function[cur, cur //. {
+  Inactive[Integrate][s_Plus, dom_] :> (Inactive[Integrate][#, dom] & /@ s),
+  Inactive[Integrate][p_Times, {var_, lo_, hi_}] /; (Select[p, FreeQ[#, var] &] =!= 1) :>
+    With[{free = Select[p, FreeQ[#, var] &], dep = Select[p, ! FreeQ[#, var] &]},
+      free Inactive[Integrate][dep, {var, lo, hi}]],
+  Inactive[Integrate][c_, {var_, lo_, hi_}] /; FreeQ[c, var] :> c (hi - lo)
+}];
+
+(* §6.2 change of variables: old = phi(newvar), with Jacobian and new limits *)
+changeVar[newvar_, phi_, {na_, nb_}] := Function[cur,
+  cur /. Inactive[Integrate][f_, {var_, lo_, hi_}] :>
+    Inactive[Integrate][(f /. var -> phi) D[phi, newvar], {newvar, na, nb}]];
+
+(* §6.3 integration by parts: integrand must be u * D[v]; boundary term + remainder *)
+ibp::mismatch = "Integrand does not equal u * D[v, x]; IBP not applied.";
+ibp[u_, v_] := Function[cur,
+  cur /. Inactive[Integrate][integ_, {var_, lo_, hi_}] :>
+    If[Simplify[integ - u D[v, var]] === 0,
+      ((u v) /. var -> hi) - ((u v) /. var -> lo) - Inactive[Integrate][D[u, var] v, {var, lo, hi}],
+      (Message[ibp::mismatch]; Inactive[Integrate][integ, {var, lo, hi}])]];
+
+(* §6.5 split the domain at an interior point *)
+splitDomain[c_] := Function[cur,
+  cur /. Inactive[Integrate][f_, {var_, lo_, hi_}] :>
+    Inactive[Integrate][f, {var, lo, c}] + Inactive[Integrate][f, {var, c, hi}]];
+
+(* §6.6 swap sum and integral (both directions; bridges to Sums) *)
+swapSumIntegral := Function[cur, cur /. {
+  Inactive[Integrate][Inactive[Sum][f_, idx_], dom_] :> Inactive[Sum][Inactive[Integrate][f, dom], idx],
+  Inactive[Sum][Inactive[Integrate][f_, dom_], idx_] :> Inactive[Integrate][Inactive[Sum][f, idx], dom]
+}];
+
+(* ============================================================ *)
+(* Verification                                                 *)
+(* ============================================================ *)
+intExprQ[e_] := ! FreeQ[e, Inactive[Integrate]];
+
+intVars[e_] := DeleteDuplicates@Join[
+  Cases[e, Inactive[Integrate][_, {v_, _, _}] :> v, {0, Infinity}],
+  Cases[e, Inactive[Integrate][_, v_Symbol] :> v, {0, Infinity}]];
+
+intParams[e_] := Complement[
+  DeleteDuplicates@Cases[e, s_Symbol /; (Context[s] =!= "System`" && ! NumericQ[s]), {0, Infinity}],
+  intVars[e]];
+
+(* symbolic: Activate and try to prove the difference is 0 (time-bounded) *)
+intSymZero[before_, after_, asm_] := TrueQ@Quiet@TimeConstrained[
+  Simplify[Activate[before] - Activate[after], asm] === 0, 5, False];
+
+(* numeric: random params, Inactive[Integrate] -> NIntegrate, compare *)
+integralProbe[before_, after_, asm_, trials_: 6] := Module[{params, res, tol = 10.^-5},
+  params = Union[intParams[before], intParams[after]];
+  res = Table[
+    Module[{sub = (# -> RandomReal[{0.4, 2.2}]) & /@ params, bn, an},
+      Quiet@Check[
+        bn = N[(before /. sub) /. Inactive[Integrate] -> NIntegrate];
+        an = N[(after /. sub) /. Inactive[Integrate] -> NIntegrate];
+        If[NumericQ[bn] && NumericQ[an], Abs[an - bn] <= tol (1 + Abs[bn]), $bad],
+        $bad]],
+    {trials}];
+  res = DeleteCases[res, $bad];
+  Which[res === {}, Unknown, MemberQ[res, False], False, True, True]
+];
+
+intCertify[before_, after_, Equal, asm_] := Module[{sz, pr, status},
+  sz = intSymZero[before, after, asm];
+  pr = integralProbe[before, after, asm];
+  status = Which[pr === False, "Refuted", sz, "Verified", pr === True, "NumericOnly", True, "Unverified"];
+  <|"relation" -> Equal, "symbolic" -> If[sz, True, Unknown],
+    "numeric" -> <|"verdict" -> pr|>, "status" -> status|>
+];
+intCertify[before_, after_, rel_, asm_] :=
+  <|"relation" -> rel, "symbolic" -> Unknown, "numeric" -> <|"verdict" -> Unknown|>,
+    "status" -> "Unverified"|>;
