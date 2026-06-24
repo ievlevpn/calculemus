@@ -1,70 +1,56 @@
 (* ::Package:: *)
 
-(* Calculemus formal-sum self-checks.
-     wolframscript -file Tests/SumsTests.wl  *)
+(* Calculemus formal-sum self-checks (held Inactive[Sum]).
+   Standalone:  wolframscript -file Tests/SumsTests.wl  *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "TestHarness.wl"}]];
+suite["Sums"];
 
-ClearAll[assert];
-SetAttributes[assert, HoldFirst];
-assert[cond_, label_: ""] := If[TrueQ[cond], $passed++,
-  Print["FAILED: ", label, " :: ", HoldForm[cond]]; Exit[1]];
-$passed = 0;
-
-(* ---- linearity: split sum + pull out index-free factor ---- *)
+(* ============================================================ *)
+section["constructor & linearity"];
+test["sum constructor", sum[f[k], {k, 0, 3}] === Inactive[Sum][f[k], {k, 0, 3}]];
 dL = derive[sum[c k + k^2, {k, 0, 5}]] // step[sumLinearity];
-assert[FreeQ[result[dL], Inactive[Sum][_Plus, _]], "sum linearity split"];
-assert[verifiedQ[dL], "sum linearity verified"];
+test["split over addends", FreeQ[result[dL], Inactive[Sum][_Plus, _]]];
+test["pulled out index-free factor", FreeQ[result[dL], Inactive[Sum][c k, _]]];
+test["sum linearity verified", verifiedQ[dL]];
 
-(* ---- reindex (shift index by 2, summand adjusted) ---- *)
+(* ============================================================ *)
+section["index surgery (concrete bounds)"];
 dR = derive[sum[k^2, {k, 0, 3}]] // step[shiftIndex[2]];
-assert[verifiedQ[dR], "shiftIndex verified"];
-
-(* ---- split range ---- *)
+test["shiftIndex verified", verifiedQ[dR]];
 dS = derive[sum[k^2, {k, 0, 5}]] // step[splitSum[2]];
-assert[verifiedQ[dS], "splitSum verified"];
-
-(* ---- swap nested sums (Fubini) ---- *)
+test["splitSum verified", verifiedQ[dS]];
+test["splitSum produced two sums", Length[Cases[result[dS], Inactive[Sum][__], Infinity]] === 2];
+dPf = derive[sum[k^2, {k, 1, 5}]] // step[peelFirst];
+test["peelFirst verified", verifiedQ[dPf]];
+dPl = derive[sum[k^2, {k, 1, 5}]] // step[peelLast];
+test["peelLast verified", verifiedQ[dPl]];
 dF = derive[Inactive[Sum][Inactive[Sum][i j, {j, 0, 3}], {i, 0, 2}]] // step[swapSum];
-assert[verifiedQ[dF], "swapSum verified"];
+test["swapSum (Fubini) verified", verifiedQ[dF]];
+dG = derive[c sum[k, {k, 0, 5}] + sum[k^2, {k, 0, 5}]] // step[gather];
+test["gather combines same-range sums verified", verifiedQ[dG]];
 
-(* ---- refuted: shift bounds but FORGET to adjust the summand ---- *)
 dBad = Quiet@step[derive[sum[k^2, {k, 0, 3}]],
    Function[cur, cur /. Inactive[Sum][f_, {k_, a_, b_}] :> Inactive[Sum][f, {k, a + 2, b + 2}]]];
-assert[stepsOf[dBad][[1]]["cert"]["status"] === "Refuted", "bad reindex refuted"];
+test["shifting bounds without adjusting summand Refuted", statusOf[dBad] === "Refuted"];
 
-(* ---- gather: inverse of linearity (combine same-range sums) ---- *)
-dG = derive[c sum[k, {k, 0, 5}] + sum[k^2, {k, 0, 5}]] // step[gather];
-assert[verifiedQ[dG], "gather sums verified"];
-
-(* ---- peel off the first term ---- *)
-dPf = derive[sum[k^2, {k, 1, 5}]] // step[peelFirst];
-assert[verifiedQ[dPf], "peelFirst verified"];
-
-(* ============ symbolic dimension n (not a fixed number) ============ *)
-(* reindex a sum over 1..n - verified by testing several concrete n *)
+(* ============================================================ *)
+section["symbolic dimension n (concrete-n probe)"];
 dN = derive[sum[k^2, {k, 1, n}]] // step[shiftIndex[1]];
-assert[verifiedQ[dN], "shiftIndex over 1..n verified (concrete-n probe)"];
-
-(* peel the first term of a sum over 1..n *)
+test["shiftIndex over 1..n verified", verifiedQ[dN]];
 dNp = derive[sum[k^2, {k, 1, n}]] // step[peelFirst];
-assert[verifiedQ[dNp], "peelFirst over 1..n verified"];
-
-(* a DOUBLE sum over 1..n, swap the order of summation *)
+test["peelFirst over 1..n verified", verifiedQ[dNp]];
 dD = derive[Inactive[Sum][Inactive[Sum][i j, {j, 1, n}], {i, 1, n}]] // step[swapSum];
-assert[verifiedQ[dD], "double sum over 1..n: swap order verified"];
-
-(* gather two sums over 1..n into one *)
+test["double sum over 1..n swap verified", verifiedQ[dD]];
 dGn = derive[sum[k, {k, 1, n}] + sum[k^2, {k, 1, n}]] // step[gather];
-assert[verifiedQ[dGn], "gather over 1..n verified"];
-
-(* a WRONG reindex over 1..n is still caught at concrete n *)
+test["gather over 1..n verified", verifiedQ[dGn]];
 dBadN = Quiet@step[derive[sum[k^2, {k, 1, n}]],
    Function[cur, cur /. Inactive[Sum][f_, {k_, a_, b_}] :> Inactive[Sum][f, {k, a + 1, b + 1}]]];
-assert[stepsOf[dBadN][[1]]["cert"]["status"] === "Refuted", "wrong reindex over 1..n refuted"];
+test["wrong reindex over 1..n Refuted", statusOf[dBadN] === "Refuted"];
 
-(* ---- scalar work still routes correctly (no Inactive heads) ---- *)
+(* ============================================================ *)
+section["routing: scalars are not misrouted"];
 dScalar = derive[(p + q)^2] // step[rewrite[(p + q)^2 -> p^2 + 2 p q + q^2]];
-assert[verifiedQ[dScalar], "scalar not misrouted"];
+test["scalar work verified", verifiedQ[dScalar]];
 
-Print["ALL TESTS PASSED (", $passed, " assertions)"];
+endSuite[];

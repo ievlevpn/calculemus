@@ -1,88 +1,83 @@
 (* ::Package:: *)
 
 (* Calculemus non-commutative / matrix self-checks.
-     wolframscript -file Tests/MatrixTests.wl  *)
+   Standalone:  wolframscript -file Tests/MatrixTests.wl
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
+   NOTE: NC symbols use unique multi-letter names with mt and vc prefixes so that,
+   when every suite runs in one kernel (RunTests.wl), declaring them
+   non-commutative cannot mis-route the scalar expressions used by other suites. *)
 
-ClearAll[assert];
-SetAttributes[assert, HoldFirst];
-assert[cond_, label_: ""] := If[TrueQ[cond], $passed++,
-  Print["FAILED: ", label, " :: ", HoldForm[cond]]; Exit[1]];
-$passed = 0;
-ncSame[a_, b_] := NCExpand[a - b] === 0;
+Get[FileNameJoin[{DirectoryName[$InputFileName], "TestHarness.wl"}]];
+suite["Matrix"];
 
-ncDeclare[s, e, x, y, z, mA, mB];
+ncDeclare[mtX, mtY, mtZ, mtA, mtB, mtA1, mtGen, mtS, mtE];
+ncDeclareVec[vcW, vcC, vcX];
+ncDeclareSym[mtSym];
 
-(* ---- NC equality verified (symbolic NCExpand) ---- *)
-dEq = derive[x ** (y + z)] // step[NCExpand];
-assert[ncSame[result[dEq], x ** y + x ** z], "dEq result"];
-assert[relationOf[dEq] === Equal, "dEq relation"];
-assert[verifiedQ[dEq], "dEq verified"];
+(* ============================================================ *)
+section["NC equality (symbolic NCExpand + random-matrix probe)"];
+dEq = derive[mtX ** (mtY + mtZ)] // step[NCExpand];
+test["distribute result", ncSame[result[dEq], mtX ** mtY + mtX ** mtZ]];
+test["relation =", relationOf[dEq] === Equal];
+test["verified", verifiedQ[dEq]];
 
-(* ---- NC equality refuted by random-matrix probe (matrices don't commute) ---- *)
-dBad = Quiet@step[derive[x ** y], (# /. x ** y -> y ** x &)];
-assert[stepsOf[dBad][[1]]["cert"]["status"] === "Refuted", "dBad refuted"];
+dEq2 = derive[(mtA + mtB) ** (mtA - mtB)] // step[NCExpand];
+test["non-commuting cross terms kept",
+  ncSame[result[dEq2], mtA ** mtA - mtA ** mtB + mtB ** mtA - mtB ** mtB]];
+test["verified (cross terms)", verifiedQ[dEq2]];
 
-(* ---- NC equality that is genuinely non-commutative (cross terms don't cancel) ---- *)
-dEq2 = derive[(mA + mB) ** (mA - mB)] // step[NCExpand];
-assert[ncSame[result[dEq2], mA ** mA - mA ** mB + mB ** mA - mB ** mB], "dEq2 result"];
-assert[verifiedQ[dEq2], "dEq2 verified"];
+dBad = Quiet@step[derive[mtX ** mtY], (# /. mtX ** mtY -> mtY ** mtX &)];
+test["commuting two matrices is Refuted", statusOf[dBad] === "Refuted"];
 
-(* ---- graded NC Neumann inverse (the matrix Sigma^{-1}(t) lemma) ---- *)
-dN = derive[inv[s - e], Grading -> {e -> 1}, GradingOrder -> 2] //
-     step[expandInverse[s, e, 2]];
-assert[ncSame[result[dN],
-   inv[s] + inv[s] ** e ** inv[s] + inv[s] ** e ** inv[s] ** e ** inv[s]], "dN result"];
-assert[relationOf[dN] === AsymEqual, "dN relation"];
-assert[stepsOf[dN][[1]]["cert"]["status"] === "Verified", "dN verified (order probe)"];
+(* ============================================================ *)
+section["graded NC Neumann inverse"];
+test["neumannInverse order 1",
+  ncSame[neumannInverse[mtS, mtE, 1], inv[mtS] + inv[mtS] ** mtE ** inv[mtS]]];
+dN = derive[inv[mtS - mtE], Grading -> {mtE -> 1}, GradingOrder -> 2] //
+     step[expandInverse[mtS, mtE, 2]];
+test["expandInverse result", ncSame[result[dN],
+  inv[mtS] + inv[mtS] ** mtE ** inv[mtS] + inv[mtS] ** mtE ** inv[mtS] ** mtE ** inv[mtS]]];
+test["relation ~", relationOf[dN] === AsymEqual];
+test["Verified (order probe)", statusOf[dN] === "Verified"];
 
-(* ---- over-truncation refuted: claim inv[s] ~ inv[s-e] to order 2 ---- *)
-dNbad = Quiet@step[
-   derive[inv[s - e], Grading -> {e -> 1}, GradingOrder -> 2],
-   Function[cur, Yields[inv[s], AsymEqual, "drop too much"]]];
-assert[stepsOf[dNbad][[1]]["cert"]["status"] === "Refuted", "dNbad refuted"];
+dNbad = Quiet@step[derive[inv[mtS - mtE], Grading -> {mtE -> 1}, GradingOrder -> 2],
+   Function[cur, Yields[inv[mtS], AsymEqual, "drop too much"]]];
+test["over-truncation Refuted", statusOf[dNbad] === "Refuted"];
 
-(* ---- symmetric / antisymmetric split ---- *)
-ncDeclare[A1];
-assert[ncSame[symPart[A1] + antiPart[A1], A1], "sym+anti = A1"];
-assert[ncSame[symPart[A1], (A1 + tp[A1])/2], "symPart"];
+(* ============================================================ *)
+section["symmetric / antisymmetric split"];
+test["sym + anti = A", ncSame[symPart[mtA1] + antiPart[mtA1], mtA1]];
+test["symPart formula", ncSame[symPart[mtA1], (mtA1 + tp[mtA1])/2]];
+test["antiPart formula", ncSame[antiPart[mtA1], (mtA1 - tp[mtA1])/2]];
 
-(* ---- quadratic form vanishes under a side relation (exponential-prefactor move) ----
-   w^T (A1 + A1^T) w = 0  given  A1 w = 0. Verified by random A1, w with A1.w = 0. *)
-ncDeclareVec[w];
-rels = {A1 ** w -> 0, tp[w] ** tp[A1] -> 0};
-dPref = derive[tp[w] ** (A1 + tp[A1]) ** w, Relations -> rels] //
-        step[NCExpand] //
-        step[applyRel[rels]];
-assert[result[dPref] === 0, "prefactor vanishes"];
-assert[verifiedQ[dPref], "prefactor verified under A1 w = 0"];
+(* ============================================================ *)
+section["quadratic forms under side relations"];
+rels = {mtA1 ** vcW -> 0, tp[vcW] ** tp[mtA1] -> 0};
+dPref = derive[tp[vcW] ** (mtA1 + tp[mtA1]) ** vcW, Relations -> rels] //
+        step[NCExpand] // step[applyRel[rels]];
+test["w^T(A+A^T)w vanishes under A w = 0", result[dPref] === 0];
+test["verified under the relation", verifiedQ[dPref]];
 
-(* ---- context-aware: applyRel[] reads Relations from the derivation ---- *)
-dPref2 = derive[tp[w] ** (A1 + tp[A1]) ** w, Relations -> rels] //
+dPref2 = derive[tp[vcW] ** (mtA1 + tp[mtA1]) ** vcW, Relations -> rels] //
          step[NCExpand] // step[applyRel[]];
-assert[result[dPref2] === 0, "applyRel[] reads relations"];
-assert[verifiedQ[dPref2], "applyRel[] verified"];
+test["context-aware applyRel[] reads relations", result[dPref2] === 0];
+test["context-aware verified", verifiedQ[dPref2]];
 
-(* ---- refuted: claim w^T A1 w == w^T w; false, since w^T A1 w = 0 under A1 w = 0 ---- *)
-dPrefBad = Quiet@step[
-   derive[tp[w] ** A1 ** w, Relations -> {A1 ** w -> 0}],
-   Function[cur, tp[w] ** w]];
-assert[stepsOf[dPrefBad][[1]]["cert"]["status"] === "Refuted", "prefBad refuted"];
+dPrefBad = Quiet@step[derive[tp[vcW] ** mtA1 ** vcW, Relations -> {mtA1 ** vcW -> 0}],
+   Function[cur, tp[vcW] ** vcW]];
+test["false claim under relation Refuted", statusOf[dPrefBad] === "Refuted"];
 
-(* ---- symmetric quadratic-form complete-the-square (A symmetric) ---- *)
-ncDeclareSym[capA]; ncDeclareVec[cc, xx];
-dMCS = derive[quadForm[capA, cc, xx]] // step[completeSquareMat[capA, cc, xx] &];
-assert[verifiedQ[dMCS], "completeSquareMat verified (symmetric A)"];
+(* ============================================================ *)
+section["matrix complete-the-square (symmetry is load-bearing)"];
+dMCS = derive[quadForm[mtSym, vcC, vcX]] // step[completeSquareMat[mtSym, vcC, vcX] &];
+test["symmetric completion verified", verifiedQ[dMCS]];
+dMCSbad = Quiet@step[derive[quadForm[mtGen, vcC, vcX]],
+   Function[cur, completeSquareMat[mtGen, vcC, vcX]]];
+test["non-symmetric completion Refuted", statusOf[dMCSbad] === "Refuted"];
 
-(* ---- symmetry is load-bearing: a generic (non-symmetric) A completion is refused ---- *)
-ncDeclare[genA];
-dMCSbad = Quiet@step[derive[quadForm[genA, cc, xx]],
-   Function[cur, completeSquareMat[genA, cc, xx]]];
-assert[stepsOf[dMCSbad][[1]]["cert"]["status"] === "Refuted", "non-symmetric completion refused"];
-
-(* ---- scalar work is NOT misrouted to the NC path (no declared NC symbols) ---- *)
+(* ============================================================ *)
+section["routing: scalars are not sent to the NC path"];
 dScalar = derive[(p + q)^2] // step[rewrite[(p + q)^2 -> p^2 + 2 p q + q^2]];
-assert[verifiedQ[dScalar], "scalar not misrouted"];
+test["scalar work verified", verifiedQ[dScalar]];
 
-Print["ALL TESTS PASSED (", $passed, " assertions)"];
+endSuite[];

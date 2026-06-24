@@ -1,62 +1,113 @@
 (* ::Package:: *)
 
-(* Calculemus core self-checks. Run headless:
-     wolframscript -file Tests/CoreTests.wl
-   Exits nonzero on first failure. *)
+(* Calculemus Core self-checks: relations algebra, certify, the Derivation
+   chain, status bookkeeping, assumption accumulation, rewrite helpers.
+   Standalone:  wolframscript -file Tests/CoreTests.wl  *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "TestHarness.wl"}]];
+suite["Core"];
 
-ClearAll[assert];
-SetAttributes[assert, HoldFirst];
-assert[cond_, label_: ""] := If[TrueQ[cond], $passed++,
-  Print["FAILED: ", label, " :: ", HoldForm[cond]]; Exit[1]];
-$passed = 0;
+(* ============================================================ *)
+section["relations: flip"];
+test["flip =",  flipRelation[Equal] === Equal];
+test["flip <=", flipRelation[LessEqual] === GreaterEqual];
+test["flip >=", flipRelation[GreaterEqual] === LessEqual];
+test["flip <",  flipRelation[Less] === Greater];
+test["flip >",  flipRelation[Greater] === Less];
+test["flip ~",  flipRelation[AsymEqual] === AsymEqual];
 
-same[a_, b_] := TrueQ[Simplify[a - b] === 0] || a === b;
+(* ============================================================ *)
+section["relations: compose"];
+test["= is identity (left)",  composeRelation[Equal, LessEqual] === LessEqual];
+test["= is identity (right)", composeRelation[Greater, Equal] === Greater];
+test["<= o <= = <=", composeRelation[LessEqual, LessEqual] === LessEqual];
+test["<= o <  = <",  composeRelation[LessEqual, Less] === Less];
+test["<  o <= = <",  composeRelation[Less, LessEqual] === Less];
+test[">= o >  = >",  composeRelation[GreaterEqual, Greater] === Greater];
+test["~ o ~  = ~",   composeRelation[AsymEqual, AsymEqual] === AsymEqual];
+test["<= o >= incomparable", Quiet[composeRelation[LessEqual, GreaterEqual]] === $Failed];
+test["<  o >  incomparable", Quiet[composeRelation[Less, Greater]] === $Failed];
+test["~  o <= incomparable", Quiet[composeRelation[AsymEqual, LessEqual]] === $Failed];
 
-(* ---- relations algebra ---- *)
-assert[composeRelation[LessEqual, LessEqual] === LessEqual, "<=o<="];
-assert[composeRelation[Equal, LessEqual] === LessEqual, "=o<="];
-assert[composeRelation[LessEqual, Less] === Less, "<=o<"];
-assert[flipRelation[LessEqual] === GreaterEqual, "flip<="];
-assert[Quiet[composeRelation[LessEqual, GreaterEqual]] === $Failed, "incomparable"];
+(* ============================================================ *)
+section["relationLabel"];
+test["label =",  relationLabel[Equal] === "="];
+test["label <",  relationLabel[Less] === "<"];
+test["label ~",  relationLabel[AsymEqual] === "~"];
 
-(* ---- verified equality derivation ---- *)
+(* ============================================================ *)
+section["certify: verdicts"];
+test["equality Verified", certify[(a + b)^2, a^2 + 2 a b + b^2, Equal, True]["status"] === "Verified"];
+test["equality Refuted",  certify[a, a + 1, Equal, True]["status"] === "Refuted"];
+test["inequality Verified", certify[x^2 + 1, x^2 + 2, LessEqual, True]["status"] === "Verified"];
+test["inequality Refuted (wrong dir)", certify[x^2 + 2, x^2 + 1, LessEqual, True]["status"] === "Refuted"];
+test["inequality under assumptions", certify[t, t + t^2, LessEqual, t > 0]["status"] === "Verified"];
+test["true-but-hard is at least not Refuted/Unverified",
+  MemberQ[{"Verified", "NumericOnly"}, certify[Exp[x], 1 + x, GreaterEqual, x > 0]["status"]]];
+test["~ without grading is Unverified", certify[a, b, AsymEqual, True]["status"] === "Unverified"];
+test["certify carries the relation", certify[a, a, Equal, True]["relation"] === Equal];
+
+(* ============================================================ *)
+section["derive / accessors"];
+d0 = derive[a + b];
+test["empty derivation result = start", result[d0] === a + b];
+test["empty derivation relation = =", relationOf[d0] === Equal];
+test["empty derivation verified (vacuous)", verifiedQ[d0]];
+test["assumptions default True", assumptionsOf[d0] === True];
+test["assumptions list -> And", assumptionsOf[derive[x, Assumptions -> {x > 0, x < 1}]] === (x > 0 && x < 1)];
+test["stepsOf empty = {}", stepsOf[d0] === {}];
+
+(* ============================================================ *)
+section["step: verified equality"];
 d1 = derive[(a + b)^2] // step[rewrite[(a + b)^2 -> a^2 + 2 a b + b^2]];
-assert[same[result[d1], a^2 + 2 a b + b^2], "d1 result"];
-assert[relationOf[d1] === Equal, "d1 relation"];
-assert[verifiedQ[d1], "d1 verified"];
+test["result", same[result[d1], a^2 + 2 a b + b^2]];
+test["relation =", relationOf[d1] === Equal];
+test["verified", verifiedQ[d1]];
+test["one step recorded", Length[stepsOf[d1]] === 1];
+test["note default empty", stepsOf[d1][[1]]["note"] === ""];
+d1n = derive[a] // step[rewrite[a -> a], "identity"];
+test["note recorded", stepsOf[d1n][[1]]["note"] === "identity"];
 
-(* ---- refuted equality is caught ---- *)
+(* ============================================================ *)
+section["step: refutation is recorded, not thrown"];
 d2 = Quiet@step[derive[a], rewrite[a -> a + 1]];
-assert[stepsOf[d2][[1]]["cert"]["status"] === "Refuted", "d2 refuted"];
-assert[! verifiedQ[d2], "d2 not verified"];
+test["status Refuted", statusOf[d2] === "Refuted"];
+test["not verified", ! verifiedQ[d2]];
+test["step still recorded", Length[stepsOf[d2]] === 1];
 
-(* ---- inequality chain: drop a nonnegative term (>=) ---- *)
+(* ============================================================ *)
+section["step: inequality chain + composition"];
 d3 = derive[x^2 + y^2 + 1] // step[dropTerm[x^2]];
-assert[same[result[d3], y^2 + 1], "d3 result"];
-assert[relationOf[d3] === GreaterEqual, "d3 relation"];
-assert[verifiedQ[d3], "d3 verified"];
-
-(* ---- boundBy under assumptions (t <= t + t^2 for t>0) ---- *)
-d4 = derive[t, Assumptions -> t > 0] // step[boundBy[t + t^2, LessEqual]];
-assert[same[result[d4], t + t^2], "d4 result"];
-assert[verifiedQ[d4], "d4 verified"];
-
-(* ---- wrong-direction bound is refuted (t <= t/2 is false for t>0) ---- *)
-d5 = Quiet@step[derive[t, Assumptions -> t > 0], boundBy[t/2, LessEqual]];
-assert[stepsOf[d5][[1]]["cert"]["status"] === "Refuted", "d5 refuted"];
-
-(* ---- multi-step chain composes relations (= then >= gives >=) ---- *)
-d6 = derive[(p + q)^2 + r^2, Assumptions -> True] //
+test["drop term result", same[result[d3], y^2 + 1]];
+test["drop term relation >=", relationOf[d3] === GreaterEqual];
+test["drop term verified", verifiedQ[d3]];
+d6 = derive[(p + q)^2 + r^2] //
      step[rewrite[(p + q)^2 -> p^2 + 2 p q + q^2]] //
      step[dropTerm[r^2]];
-assert[relationOf[d6] === GreaterEqual, "d6 relation"];
-assert[verifiedQ[d6], "d6 verified"];
+test["= then >= composes to >=", relationOf[d6] === GreaterEqual];
+test["two-step chain verified", verifiedQ[d6]];
+test["two steps recorded", Length[stepsOf[d6]] === 2];
 
-(* ---- sign certificates (§9.7) ---- *)
-assert[signOf[x^2] === NonNegative, "sign x^2"];
-assert[signOf[t, t > 0] === Positive, "sign t>0"];
-assert[signOf[-u^2 - 1, u \[Element] Reals] === Negative, "sign -u^2-1"];
+(* ============================================================ *)
+section["step: assumed -> Asserted overrides refutation"];
+dA = step[derive[x], Function[cur, Yields[x + 1, Equal, "", <|"assumed" -> True|>]]];
+test["assumed step is Asserted (not Refuted)", statusOf[dA] === "Asserted"];
+test["Asserted counts as verified-enough", verifiedQ[dA]];
 
-Print["ALL TESTS PASSED (", $passed, " assertions)"];
+(* ============================================================ *)
+section["step: side-conditions accumulate / contradict"];
+dCond = step[derive[x], Function[cur, Yields[x, Equal, "", <|"conditions" -> (y > 0)|>]]];
+test["condition accumulated into assumptions", assumptionsOf[dCond] === (y > 0)];
+dContra = Quiet@step[derive[x, Assumptions -> x > 0],
+   Function[cur, Yields[x, Equal, "", <|"conditions" -> (x < 0)|>]]];
+test["contradictory condition -> Refuted", statusOf[dContra] === "Refuted"];
+
+(* ============================================================ *)
+section["rewrite / at helpers"];
+test["rewrite[rule] is a function", rewrite[a -> b][a + c] === b + c];
+test["at by single position", at[a + b + c, {2}, f] === a + f[b] + c];
+test["at by many positions", at[a + b + c, {{1}, {3}}, f] === f[a] + b + f[c]];
+test["at by pattern", same[at[x^2 + y^2, _Symbol^2, g], g[x^2] + g[y^2]] ||
+   at[x^2 + y^2, _Symbol^2, g] === g[x^2] + g[y^2]];
+
+endSuite[];

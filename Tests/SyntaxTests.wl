@@ -1,76 +1,91 @@
 (* ::Package:: *)
 
 (* Calculemus natural-syntax self-checks (tactic mode, verbs, >op> operator).
-     wolframscript -file Tests/SyntaxTests.wl  *)
+   Standalone:  wolframscript -file Tests/SyntaxTests.wl  *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "TestHarness.wl"}]];
+suite["Syntax"];
 
-ClearAll[assert];
-SetAttributes[assert, HoldFirst];
-assert[cond_, label_: ""] := If[TrueQ[cond], $passed++,
-  Print["FAILED: ", label, " :: ", HoldForm[cond]]; Exit[1]];
-$passed = 0;
+(* ============================================================ *)
+section["tactic mode: compute / by / goal"];
+compute[(a + b)^2];
+by[rewrite[(a + b)^2 -> a^2 + 2 a b + b^2]];
+by[drop[a^2]];
+test["two steps recorded", Length[stepsOf[goal[]]] === 2];
+test["chain relation >=", relationOf[goal[]] === GreaterEqual];
+test["chain verified", verifiedQ[goal[]]];
+undo[];
+test["undo removes a step", Length[stepsOf[goal[]]] === 1];
 
-(* ---- tactic mode: the zeta(4) integral, paper style ---- *)
+(* ============================================================ *)
+section["the zeta(4) integral, end to end"];
 compute[Inactive[Integrate][x^3/(E^x - 1), {x, 0, Infinity}], Assumptions -> x > 0];
 by[rewrite[1/(E^x - 1) -> Inactive[Sum][E^(-k x), {k, 1, Infinity}]]];
 by[fubini];
 by[evaluate];
-assert[result[goal[]] === Pi^4/15, "tactic-mode zeta result"];
-assert[verifiedQ[goal[]], "tactic-mode zeta verified"];
+test["result Pi^4/15", result[goal[]] === Pi^4/15];
+test["fully verified", verifiedQ[goal[]]];
 
-(* ---- undo ---- *)
-compute[(a + b)^2];
-by[rewrite[(a + b)^2 -> a^2 + 2 a b + b^2]];
-by[drop[a^2]];
-assert[Length[stepsOf[goal[]]] === 2, "two steps recorded"];
-undo[];
-assert[Length[stepsOf[goal[]]] === 1, "undo removed a step"];
-
-(* ---- named inequality verb ---- *)
+(* ============================================================ *)
+section["named-inequality verbs"];
 compute[Sqrt[u v]];
 by[amgm[u, v]];
-assert[result[goal[]] === (u + v)/2, "amgm verb result"];
-assert[verifiedQ[goal[]], "amgm verb verified"];
-assert[assumptionsOf[goal[]] === (u >= 0 && v >= 0), "amgm verb accumulated conditions"];
+test["amgm verb result", result[goal[]] === (u + v)/2];
+test["amgm verb verified", verifiedQ[goal[]]];
+test["amgm verb conditions", assumptionsOf[goal[]] === (u >= 0 && v >= 0)];
 
-(* ---- atMost / atLeast verbs ---- *)
+compute[1 + a];
+by[expBound[a]];
+test["expBound verb verified", verifiedQ[goal[]] && result[goal[]] === Exp[a]];
+
+compute[Abs[p + q]];
+by[triangleIneq[p, q]];
+test["triangleIneq verb verified", verifiedQ[goal[]]];
+
+(* ============================================================ *)
+section["bound verbs"];
 compute[t, Assumptions -> t > 0];
 by[atMost[t + t^2]];
-assert[relationOf[goal[]] === LessEqual && verifiedQ[goal[]], "atMost verb"];
+test["atMost <= verified", relationOf[goal[]] === LessEqual && verifiedQ[goal[]]];
+compute[t + t^2, Assumptions -> t > 0];
+by[atLeast[t]];
+test["atLeast >= verified", relationOf[goal[]] === GreaterEqual && verifiedQ[goal[]]];
 
-(* ---- the >op> operator (one-cell functional chain) ---- *)
-d = derive[(p + q)^2] \[RightTriangle] rewrite[(p + q)^2 -> p^2 + 2 p q + q^2] \[RightTriangle] drop[p^2];
-assert[relationOf[d] === GreaterEqual, ">op> chain relation"];
-assert[verifiedQ[d], ">op> chain verified"];
-
-(* ---- two-sided in tactic mode: ln P <= B  =>  P <= e^B ---- *)
-compute[Log[P] <= B];
-by[applyBoth[Exp], "exponentiate both sides"];
-assert[rhsOf[goal[]] === Exp[B] && verifiedQ[goal[]], "two-sided tactic mode"];
-
-(* ---- let / restore via tactic mode ---- *)
+(* ============================================================ *)
+section["let / restore verb"];
 compute[(m + n)^2 + (m + n)];
 by[let[s, m + n]];
 by[rewrite[s^2 + s -> s (s + 1)]];
-assert[verifiedQ[goal[]], "let verb verified"];
+test["let verb verified", verifiedQ[goal[]]];
 
-(* ---- claim: an unverified claim mid-derivation, collected by caveats[] ---- *)
+(* ============================================================ *)
+section[">op> chaining operator"];
+dChain = derive[(p + q)^2] \[RightTriangle] rewrite[(p + q)^2 -> p^2 + 2 p q + q^2] \[RightTriangle] drop[p^2];
+test[">op> chain relation >=", relationOf[dChain] === GreaterEqual];
+test[">op> chain verified", verifiedQ[dChain]];
+
+(* ============================================================ *)
+section["two-sided in tactic mode"];
+compute[Log[P] <= B];
+by[applyBoth[Exp], "exponentiate both sides"];
+test["two-sided tactic result", rhsOf[goal[]] === Exp[B]];
+test["two-sided tactic verified", verifiedQ[goal[]]];
+
+(* ============================================================ *)
+section["claim / caveats"];
 compute[c0 + dint[g[x], {x, -1, 1}]];
-by[claim[dint[g[x], {x, -1, 1}] -> 0], "claim: integral of an odd function vanishes"];
-assert[result[goal[]] === c0, "claim rewrote the integral to 0"];
-assert[stepsOf[goal[]][[-1]]["cert"]["status"] === "Asserted", "claim is Asserted"];
-assert[Head[caveats[]] === Framed, "caveats reports the claim"];
+by[claim[dint[g[x], {x, -1, 1}] -> 0], "odd function integrates to 0"];
+test["claim rewrote the integral", result[goal[]] === c0];
+test["claim is Asserted", lastStatus[goal[]] === "Asserted"];
+test["caveats reports the claim (Framed)", Head[caveats[]] === Framed];
 
-(* ---- an Unverified step is also collected ---- *)
 compute[1/(ss - ee)];
-by[Function[cur, Yields[1/ss + ee/ss^2, AsymEqual]], "asymptotic, no grading -> unverified"];
-assert[stepsOf[goal[]][[-1]]["cert"]["status"] === "Unverified", "unverified step"];
-assert[Head[caveats[]] === Framed, "caveats reports the unverified step"];
+by[Function[cur, Yields[1/ss + ee/ss^2, AsymEqual]], "no grading -> unverified"];
+test["unverified step recorded", lastStatus[goal[]] === "Unverified"];
+test["caveats reports the unverified step", Head[caveats[]] === Framed];
 
-(* ---- a fully verified derivation has no caveats ---- *)
 compute[(a + b)^2];
 by[rewrite[(a + b)^2 -> a^2 + 2 a b + b^2]];
-assert[Head[caveats[]] === Style, "no caveats when fully verified"];
+test["no caveats when fully verified", Head[caveats[]] === Style];
 
-Print["ALL TESTS PASSED (", $passed, " assertions)"];
+endSuite[];

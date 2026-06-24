@@ -108,6 +108,7 @@ peelLast::usage     = "peelLast splits off the last term of a held sum.";
 
 (* ---- Bounds (Layer 1, §9) ---- *)
 signOf::usage   = "signOf[expr] or signOf[expr, assumptions] returns Positive, Negative, NonNegative, NonPositive, or Unknown.";
+Unknown::usage  = "Unknown is the value returned by signOf (and used in verification certificates) when the sign or relation cannot be decided.";
 dropTerm::usage = "dropTerm[term] is the transform that drops a nonnegative term, asserting a GreaterEqual step (current >= current - term).";
 boundBy::usage  = "boundBy[newExpr] (or boundBy[newExpr, relation]) is the transform that replaces the current expression by newExpr, asserting the given relation (default LessEqual). The verifier checks the claim.";
 boundSub::usage = "boundSub[rule] (or boundSub[rule, relation]) bounds a subterm via rule, asserting the given relation (default LessEqual) for the whole expression.";

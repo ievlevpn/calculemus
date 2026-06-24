@@ -1,32 +1,32 @@
 (* ::Package:: *)
 
-(* Calculemus`Gaussian` DOMAIN-PACK self-checks. Loads the general core, then the
-   separate Gaussian context on top.
-     wolframscript -file Tests/GaussianTests.wl  *)
+(* Calculemus`Gaussian` DOMAIN-PACK self-checks. Loads the general core (via the
+   harness), then the separate Gaussian context on top.
+   Standalone:  wolframscript -file Tests/GaussianTests.wl  *)
 
-dir = DirectoryName[$InputFileName];
-Get[FileNameJoin[{dir, "..", "Kernel", "Calculemus.wl"}]];
-Get[FileNameJoin[{dir, "..", "Source", "Domain", "Gaussian.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "TestHarness.wl"}]];
+If[! TrueQ[$gaussianLoaded],
+  Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Source", "Domain", "Gaussian.wl"}]];
+  $gaussianLoaded = True];
+suite["Gaussian"];
 
-ClearAll[assert];
-SetAttributes[assert, HoldFirst];
-assert[cond_, label_: ""] := If[TrueQ[cond], $passed++,
-  Print["FAILED: ", label, " :: ", HoldForm[cond]]; Exit[1]];
-$passed = 0;
+ncDeclareSym[gcov]; ncDeclareVec[gvx, gvy];
 
-(* the domain symbols live in their own context, NOT in the core *)
-assert[Context[gaussExp] === "Calculemus`Gaussian`", "gaussExp is in the domain context"];
+(* ============================================================ *)
+section["context separation"];
+test["gaussExp lives in the domain context", Context[gaussExp] === "Calculemus`Gaussian`"];
 
-ncDeclareSym[cov]; ncDeclareVec[xx, yy];
+(* ============================================================ *)
+section["constructors"];
+test["gaussExp log-density exponent",
+  gaussExp[gvx, gcov] === -(1/2) tp[gvx] ** inv[gcov] ** gvx];
+test["prefactorExponent is the ratio's exponent",
+  prefactorExponent[gvx, gcov, gvy, gcov] === gaussExp[gvx, gcov] - gaussExp[gvy, gcov]];
 
-(* gaussExp builds the log-density exponent; prefactorExponent is the ratio's exponent *)
-assert[gaussExp[xx, cov] === -(1/2) tp[xx] ** inv[cov] ** xx, "gaussExp constructor"];
-assert[prefactorExponent[xx, cov, yy, cov] === gaussExp[xx, cov] - gaussExp[yy, cov],
-   "prefactorExponent constructor"];
+(* ============================================================ *)
+section["flows through the general verified machinery"];
+(* centered density is even: gaussExp(-x) = gaussExp(x), verified on random data *)
+dEven = derive[gaussExp[gvx, gcov]] // step[# /. gvx -> -gvx &];
+test["gaussExp(-x) = gaussExp(x) verified", verifiedQ[dEven]];
 
-(* the domain object flows through the general verified machinery: the two log-density
-   exponents at x and -x are equal (centered density is even), verified on random data *)
-dEven = derive[gaussExp[xx, cov]] // step[# /. xx -> -xx &];
-assert[verifiedQ[dEven], "gaussExp(-x) = gaussExp(x) verified by core machinery"];
-
-Print["ALL TESTS PASSED (", $passed, " assertions)"];
+endSuite[];

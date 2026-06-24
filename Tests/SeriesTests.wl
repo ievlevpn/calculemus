@@ -1,66 +1,68 @@
 (* ::Package:: *)
 
 (* Calculemus series / graded-asymptotics self-checks.
-     wolframscript -file Tests/SeriesTests.wl  *)
+   Standalone:  wolframscript -file Tests/SeriesTests.wl  *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "TestHarness.wl"}]];
+suite["Series"];
 
-ClearAll[assert];
-SetAttributes[assert, HoldFirst];
-assert[cond_, label_: ""] := If[TrueQ[cond], $passed++,
-  Print["FAILED: ", label, " :: ", HoldForm[cond]]; Exit[1]];
-$passed = 0;
-same[a_, b_] := TrueQ[Simplify[a - b] === 0] || a === b;
+(* ============================================================ *)
+section["grading spec & monomial weight"];
+test["normalizeGrading list of symbols", normalizeGrading[{x, y}] === {x -> 1, y -> 1}];
+test["normalizeGrading mixed", normalizeGrading[{x, y -> 2}] === {x -> 1, y -> 2}];
+test["normalizeGrading bare rule", normalizeGrading[e -> 1] === {e -> 1}];
+test["normalizeGrading bare symbol", normalizeGrading[e] === {e -> 1}];
+test["monomialWeight weight-1", monomialWeight[x^3, {x, y}] === 3];
+test["monomialWeight weighted", monomialWeight[x^2 y, {x -> 1, y -> 2}] === 4];
 
-(* ---- weighted truncation: integer weights ---- *)
-assert[same[truncate[1 + x + y + x y + x^2, {x, y}, 1], 1 + x + y], "trunc int deg1"];
-assert[same[truncate[1 + x + y + x y + x^2, {x, y}, 2], 1 + x + y + x y + x^2], "trunc int deg2"];
+(* ============================================================ *)
+section["truncate by weighted degree"];
+test["int deg 1", same[truncate[1 + x + y + x y + x^2, {x, y}, 1], 1 + x + y]];
+test["int deg 2", same[truncate[1 + x + y + x y + x^2, {x, y}, 2], 1 + x + y + x y + x^2]];
+test["frac 1/2", same[truncate[1 + x + y + x y, {x -> 1/2, y -> 1/2}, 1/2], 1 + x + y]];
+test["frac 1", same[truncate[1 + x + y + x y, {x -> 1/2, y -> 1/2}, 1], 1 + x + y + x y]];
+test["symbolic beta weight",
+  same[truncate[c0 + c1 t^\[Beta] + c2 t^(2 \[Beta]), {t}, \[Beta], \[Beta] > 0], c0 + c1 t^\[Beta]]];
+test["undecided comparison keeps term (conservative)",
+  same[Quiet@truncate[1 + x^p, {x}, q], 1 + x^p]];
 
-(* ---- fractional weights ---- *)
-assert[same[truncate[1 + x + y + x y, {x -> 1/2, y -> 1/2}, 1/2], 1 + x + y], "trunc frac 1/2"];
-assert[same[truncate[1 + x + y + x y, {x -> 1/2, y -> 1/2}, 1],   1 + x + y + x y], "trunc frac 1"];
+(* ============================================================ *)
+section["series expansion"];
+test["scalar Neumann", same[seriesExpand[1/(\[Sigma] - e), {e -> 1}, 2],
+  1/\[Sigma] + e/\[Sigma]^2 + e^2/\[Sigma]^3]];
+test["exp series", same[seriesExpand[Exp[x], {x}, 3], 1 + x + x^2/2 + x^3/6]];
+test["log series", same[seriesExpand[Log[1 + x], {x}, 3], x - x^2/2 + x^3/3]];
+test["symbolic-order falls back to truncation",
+  same[seriesExpand[1 + x + x^2, {x}, 1], 1 + x]];
 
-(* ---- symbolic-weight truncation (the paper's t^beta grading) ---- *)
-assert[same[truncate[c0 + c1 t^\[Beta] + c2 t^(2 \[Beta]), {t}, \[Beta], \[Beta] > 0],
-            c0 + c1 t^\[Beta]], "trunc symbolic beta"];
+(* ============================================================ *)
+section["o / O markers"];
+test["littleO idempotent", littleO[s] + littleO[s] === littleO[s]];
+test["littleO absorbs nonzero numeric", 3 littleO[s] === littleO[s]];
+test["bigO idempotent", bigO[s] + bigO[s] === bigO[s]];
+test["bigO absorbs littleO", littleO[s] + bigO[s] === bigO[s]];
 
-(* ---- series expansion: scalar Neumann (shadow of Lemma Sigma-inverse) ---- *)
-assert[same[seriesExpand[1/(\[Sigma] - e), {e -> 1}, 2],
-            1/\[Sigma] + e/\[Sigma]^2 + e^2/\[Sigma]^3], "neumann scalar"];
-
-(* ---- series expansion: transcendental ---- *)
-assert[same[seriesExpand[Exp[x], {x}, 3], 1 + x + x^2/2 + x^3/6], "exp series"];
-assert[same[seriesExpand[Log[1 + x], {x}, 3], x - x^2/2 + x^3/3], "log series"];
-
-(* ---- o / O markers ---- *)
-assert[littleO[s] + littleO[s] === littleO[s], "littleO idempotent"];
-assert[3 littleO[s] === littleO[s], "littleO scalar"];
-assert[littleO[s] + bigO[s] === bigO[s], "littleO absorbed by bigO"];
-
-(* ---- verified ~ step inside a derivation carrying a grading ---- *)
+(* ============================================================ *)
+section["verified / refuted ~ steps"];
 dN = derive[1/(\[Sigma] - e), Assumptions -> \[Sigma] > 0,
-            Grading -> {e -> 1}, GradingOrder -> 2] //
-     step[dropHigherOrder[{e -> 1}, 2]];
-assert[same[result[dN], 1/\[Sigma] + e/\[Sigma]^2 + e^2/\[Sigma]^3], "dN result"];
-assert[relationOf[dN] === AsymEqual, "dN relation"];
-assert[stepsOf[dN][[1]]["cert"]["status"] === "Verified", "dN verified"];
+            Grading -> {e -> 1}, GradingOrder -> 2] // step[dropHigherOrder[{e -> 1}, 2]];
+test["result", same[result[dN], 1/\[Sigma] + e/\[Sigma]^2 + e^2/\[Sigma]^3]];
+test["relation ~", relationOf[dN] === AsymEqual];
+test["Verified", statusOf[dN] === "Verified"];
 
-(* ---- context-aware: grading set once on the derivation, dropHigherOrder[] reads it ---- *)
 dCtx = derive[1/(\[Sigma] - e), Assumptions -> \[Sigma] > 0,
              Grading -> {e -> 1}, GradingOrder -> 2] // step[dropHigherOrder[]];
-assert[same[result[dCtx], 1/\[Sigma] + e/\[Sigma]^2 + e^2/\[Sigma]^3], "dropHigherOrder[] reads grading"];
-assert[stepsOf[dCtx][[1]]["cert"]["status"] === "Verified", "dCtx verified"];
+test["context-aware dropHigherOrder[] reads grading",
+  same[result[dCtx], 1/\[Sigma] + e/\[Sigma]^2 + e^2/\[Sigma]^3]];
+test["context-aware Verified", statusOf[dCtx] === "Verified"];
 
-(* ---- refuted ~ : dropping too much and claiming agreement to order 2 ---- *)
-dBad = Quiet@step[
-   derive[1/(\[Sigma] - e), Assumptions -> \[Sigma] > 0,
+dBad = Quiet@step[derive[1/(\[Sigma] - e), Assumptions -> \[Sigma] > 0,
           Grading -> {e -> 1}, GradingOrder -> 2],
    Function[cur, Yields[1/\[Sigma], AsymEqual, "drop too much"]]];
-assert[stepsOf[dBad][[1]]["cert"]["status"] === "Refuted", "dBad refuted"];
+test["dropping too much Refuted", statusOf[dBad] === "Refuted"];
 
-(* ---- ~ without a grading stays honestly Unverified ---- *)
 dU = Quiet@step[derive[1/(\[Sigma] - e)],
    Function[cur, Yields[1/\[Sigma] + e/\[Sigma]^2, AsymEqual]]];
-assert[stepsOf[dU][[1]]["cert"]["status"] === "Unverified", "dU unverified"];
+test["~ without grading stays Unverified", statusOf[dU] === "Unverified"];
 
-Print["ALL TESTS PASSED (", $passed, " assertions)"];
+endSuite[];
