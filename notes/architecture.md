@@ -102,7 +102,7 @@ roadmap, not empty stubs.
 | 0 | `Source/Core.wl` | §0.1 rewrite, §0.2 inert, §0.3 assumptions, §0.4 verify, §0.5 chain, relations | **built** |
 | 1 | `Source/Bounds.wl` | §9 bounds: sign certs, drop-term, bound-in-place | **built (slice)** |
 | 1 | `Source/Series.wl` | §4 graded truncation, multivariate o/O, formal-series arithmetic | **built** (`~` verification wired into `certify`) |
-| 1 | `Source/Matrix.wl` | §3 noncommutative / matrix / quadratic forms (NCAlgebra bridge) | planned |
+| 1 | `Source/Matrix.wl` | §3 noncommutative / matrix + §4.6 graded Neumann inverse (NCAlgebra backend) | **built** (random-matrix verification) |
 | 1 | `Source/Sums.wl` | §5 reindex / split / Fubini / Iverson | planned |
 | 1 | `Source/Integral.wl` | §6 Inactive IBP / change-of-var / Leibniz / Fubini | planned |
 | 1 | `Source/Expr.wl` | §1 generic surgery, §2 commutative (mostly native wrappers) | planned |
@@ -150,6 +150,7 @@ and inequalities.
 ## 7. Roadmap (after this slice)
 
 1. ~~`Series.wl` — graded truncation + multivariate `o`/`O`~~ **done** — `certify` now verifies `~` steps via grading; scalar Neumann expansion reproduces the shadow of Lemma `Sigma-inverse`.
-2. **`Matrix.wl`** (§3.3/3.4 + §4.6): Neumann inverse, quadratic forms under side relations; matrix numeric-probe verification. Reproduce the full (non-commutative) `Σ⁻¹(t)` expansion and the "exponential prefactor".
+2. ~~`Matrix.wl` — NC Neumann inverse + random-matrix verification~~ **done** — wraps NCAlgebra (`tp`/`aj`/`inv`/`**`), adds graded `neumannInverse`/`expandInverse`, and verifies NC `=` steps (random matrices) and graded NC `~` steps (residual order probe). Reproduces the matrix `Σ⁻¹(t)` Neumann expansion.
+   - *Next within §3:* quadratic forms under side relations (`A₁w = 0`) with relation-respecting random sampling, symmetric/antisymmetric split, then the full "exponential prefactor" derivation.
 3. **`Sums.wl` / `Integral.wl`** (§5/§6): the `Inactive`-rewrite packaging.
 4. **`Gaussian.wl`** (§8): fold recurring Gaussian moves + named inequalities (Slepian / Borell-TIS / Piterbarg) into operators.

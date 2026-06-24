@@ -114,11 +114,15 @@ numericVerdict[before_, after_, rel_, asm_] := Module[
 
 $noNumeric = <|"verdict" -> Unknown, "trials" -> 0, "passed" -> 0|>;
 
+(* default: not a non-commutative expression. Matrix.wl overrides this. *)
+ncExprQ[_] := False;
+
 certify[before_, after_, rel_, asm_] := certify[before, after, rel, asm, None, None];
 
 (* graded asymptotic equivalence: before ~ after iff their difference vanishes
    to the given order in the grading (§4.3). Verified via seriesExpand. *)
 certify[before_, after_, AsymEqual, asm_, grading_, order_] := Module[{rem, v},
+  If[ncExprQ[{before, after}], Return[ncAsymCertify[before, after, asm, grading, order]]];
   If[grading === None || order === None,
     Return[<|"relation" -> AsymEqual, "symbolic" -> Unknown,
              "numeric" -> $noNumeric, "status" -> "Unverified"|>]];
@@ -129,6 +133,7 @@ certify[before_, after_, AsymEqual, asm_, grading_, order_] := Module[{rem, v},
 ];
 
 certify[before_, after_, rel_, asm_, grading_, order_] := Module[{sym, num, status},
+  If[ncExprQ[{before, after}], Return[ncCertify[before, after, rel, asm]]];
   sym = symbolicVerdict[before, after, rel, asm];
   num = numericVerdict[before, after, rel, asm];
   status = Which[

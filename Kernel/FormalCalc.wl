@@ -4,7 +4,15 @@
    Master loader: declares the public API, then loads the implementation
    files into the private context. See notes/architecture.md. *)
 
-BeginPackage["FormalCalc`"];
+(* NCAlgebra backend for non-commutative algebra (tp/aj/inv/** used directly).
+   Pre-loaded here so the contexts are on the path for the Matrix module and the
+   user. Pre-setting NCAlgebra's private $NCAlgebra$Loaded flag makes its loader
+   non-verbose, suppressing the banner (a FilePrint, not catchable via Print);
+   Quiet suppresses the "small caps are non-commutative" message. Required §3. *)
+NCAlgebra`Private`$NCAlgebra$Loaded = True;
+Quiet@Needs["NCAlgebra`"];
+
+BeginPackage["FormalCalc`", {"NonCommutativeMultiply`"}];
 
 (* ---- Derivation: the relation-chain object (Layer 2) ---- *)
 derive::usage        = "derive[expr] starts a derivation from expr. derive[expr, Assumptions -> asm] attaches assumptions used to verify every step.";
@@ -41,6 +49,11 @@ normalizeGrading::usage = "normalizeGrading[g] canonicalizes a grading spec to a
 littleO::usage        = "littleO[scale] marks an omitted term of order o(scale). Idempotent under addition; absorbs nonzero numeric factors.";
 bigO::usage           = "bigO[scale] marks an omitted term of order O(scale). Idempotent under addition; absorbs littleO[scale] and nonzero numeric factors.";
 
+(* ---- Non-commutative / matrix algebra (Layer 1, §3 + §4.6) ---- *)
+ncDeclare::usage      = "ncDeclare[a, b, ...] marks symbols as non-commutative (matrices/operators) for both NCAlgebra and FormalCalc's verification. Multi-letter symbols must be declared; NCAlgebra treats single lowercase letters as non-commutative already.";
+neumannInverse::usage = "neumannInverse[s, e, n] is the order-n Neumann truncation of inv[s - e] = Sum_{k=0}^n (inv[s]**e)^k ** inv[s], treating e as the small (weight-1) generator.";
+expandInverse::usage  = "expandInverse[s, e, n] is the transform replacing inv[s-e] by its order-n Neumann truncation, asserting a ~ step (auto-verified via random-matrix order probe when the derivation carries Grading -> {e -> 1}, GradingOrder -> n).";
+
 (* ---- Bounds (Layer 1, §9) ---- *)
 signOf::usage   = "signOf[expr] or signOf[expr, assumptions] returns Positive, Negative, NonNegative, NonPositive, or Unknown.";
 dropTerm::usage = "dropTerm[term] is the transform that drops a nonnegative term, asserting a GreaterEqual step (current >= current - term).";
@@ -52,6 +65,7 @@ Begin["`Private`"];
 $dir = DirectoryName[$InputFileName];
 Get[FileNameJoin[{$dir, "..", "Source", "Core.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Series.wl"}]];
+Get[FileNameJoin[{$dir, "..", "Source", "Matrix.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Bounds.wl"}]];
 
 End[];
