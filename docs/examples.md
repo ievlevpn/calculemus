@@ -96,6 +96,42 @@ derive[tp[w] ** (A + tp[A]) ** w, Relations -> {A ** w -> 0, tp[w] ** tp[A] -> 0
 (* = 0, verified by sampling A, w that satisfy A w = 0 *)
 ```
 
+## Tour de force — one derivation, five phases
+
+`examples/10_tour_de_force.wl` assembles the pieces of a high-exceedance
+asymptotic (the setting of arXiv:2401.05527) as a single paper-style derivation
+in tactic mode, **every line verified**:
+
+```mathematica
+(* Phase 1 - non-commutative: perturbed inverse covariance *)
+compute[inv[CapSigma - V], Grading -> {V -> 1}, GradingOrder -> 2]
+by[expandInverse[CapSigma, V, 2]]          (* ~ G + G**V**G + G**V**G**V**G *)
+by[let[G, inv[CapSigma]]]                   (* abbreviate G := Sigma^{-1}    *)
+
+(* Phase 2 - an operator term vanishes by optimality *)
+compute[tp[w] ** (A + tp[A]) ** w, Relations -> {A ** w -> 0, tp[w] ** tp[A] -> 0}]
+by[NCExpand]; by[applyRel[]]                (* = 0 *)
+
+(* Phase 3 - the leading Gaussian integral *)
+compute[dint[Exp[-(a/2) x^2 + b x], {x, -Infinity, Infinity}], Assumptions -> a > 0]
+by[on[argOf[Exp], completeSquare[x]]]       (* complete the square in the exponent *)
+by[gaussianIntegral]                        (* Sqrt[2 Pi/a] Exp[b^2/(2a)] *)
+
+(* Phase 4 - bound a sum over a SYMBOLIC number n of components *)
+compute[sum[Log[1 + e/i^2], {i, 1, n}], Assumptions -> e > 0]
+by[on[summand, logBound[e/i^2]]]            (* <= Sum e/i^2 *)
+by[sumLinearity]                            (* = e Sum 1/i^2 *)
+
+(* Phase 5 - exponentiate a log-bound *)
+compute[Log[Q] <= B]
+by[applyBoth[Exp]]                          (* Q <= e^B *)
+```
+
+It exercises non-commutative algebra, integrals, sums with symbolic dimension,
+inequalities, subexpression addressing, abbreviations, and two-sided relations —
+the kind of multi-page derivation where one unnoticed slip on page 3 would ruin
+everything after it.
+
 ---
 
 See the [reference](reference/core.md) for every transform, and
