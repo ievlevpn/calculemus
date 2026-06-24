@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-(* FormalCalc Subexpr (§0.1): address and operate on subexpressions the way you
+(* Calculemus Subexpr (§0.1): address and operate on subexpressions the way you
    SEE them, not by tree position. A "locator" names where:
      - structural: integrand, summand, argOf[h] (e.g. argOf[Exp] = the exponent
        of e^x, argOf[Sqrt] = the radicand, argOf[Log] = inside the log),
@@ -9,7 +9,7 @@
      - a pattern (anything with _), matching all such subexpressions
      - a concrete subexpression, matching it exactly
    on[where, op] applies op there (verified); partOf shows the piece; highlight
-   boxes it in the displayed expression. Loaded in FormalCalc`Private`. *)
+   boxes it in the displayed expression. Loaded in Calculemus`Private`. *)
 
 (* ---- locate: where -> list of part-positions ---- *)
 joinPos[ps_, k_]            := (Append[#, k] &) /@ ps;

@@ -1,8 +1,8 @@
 (* ::Package:: *)
 
-(* FormalCalc Core (Layer 0 + Layer 2): relations algebra, verification,
+(* Calculemus Core (Layer 0 + Layer 2): relations algebra, verification,
    the Derivation relation-chain, and rewrite helpers.
-   Loaded by Kernel/FormalCalc.wl inside FormalCalc`Private`. *)
+   Loaded by Kernel/Calculemus.wl inside Calculemus`Private`. *)
 
 (* ============================================================ *)
 (* Relations algebra                                            *)

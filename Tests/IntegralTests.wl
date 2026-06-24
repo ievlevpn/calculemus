@@ -1,9 +1,9 @@
 (* ::Package:: *)
 
-(* FormalCalc formal-integral self-checks.
+(* Calculemus formal-integral self-checks.
      wolframscript -file Tests/IntegralTests.wl  *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 
 ClearAll[assert];
 SetAttributes[assert, HoldFirst];

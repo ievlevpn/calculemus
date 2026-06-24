@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-(* FormalCalc Assistance: notebook help - argument hints, argument-count checking,
+(* Calculemus Assistance: notebook help - argument hints, argument-count checking,
    value completions, and an input alias for the >op> operator. Loaded last.
    SyntaxInformation works everywhere; the front-end pieces (AddSpecialArgCompletion,
    input alias) run only when a notebook front-end is present. *)

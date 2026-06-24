@@ -1,11 +1,11 @@
 (* ::Package:: *)
 
-(* FormalCalc Inequalities (Layer 1, §9.5): an extensible registry of standard
+(* Calculemus Inequalities (Layer 1, §9.5): an extensible registry of standard
    inequalities applied as directional rewrites, each carrying side-conditions
    that are accumulated into the derivation's assumptions (and checked for
    contradiction). Users register their own (taken as given -> status Asserted).
    General inequalities only; domain ones (Markov, Slepian, ...) belong in packs.
-   Loaded in FormalCalc`Private`. *)
+   Loaded in Calculemus`Private`. *)
 
 $inequalities = <||>;
 

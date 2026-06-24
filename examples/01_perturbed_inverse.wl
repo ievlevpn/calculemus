@@ -15,7 +15,7 @@
    symmetric-positive-definite S and random V (so the answer is not just formal).
    ============================================================================ *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "util.wl"}]];
 
 ncDeclareSym[S];   (* covariance: symmetric positive-definite *)

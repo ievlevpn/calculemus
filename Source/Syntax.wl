@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-(* FormalCalc Syntax: a natural, paper-like surface over the functional engine.
+(* Calculemus Syntax: a natural, paper-like surface over the functional engine.
    - tactic mode: compute[...] starts a page, by[...] adds a verified line, undo[]
      steps back, goal[] is the current state. Reads like margin annotations.
    - named operations / verbs so by[...] reads like mathematics.

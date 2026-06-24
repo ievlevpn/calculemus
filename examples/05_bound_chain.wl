@@ -13,7 +13,7 @@
    then drop a nonnegative remainder to get a lower bound.
    ============================================================================ *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "util.wl"}]];
 
 (* You guide: expand the generalized variance, then drop the >=0 cross term. *)

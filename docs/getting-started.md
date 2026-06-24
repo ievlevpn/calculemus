@@ -1,6 +1,6 @@
 # Getting started
 
-FormalCalc is built for working **in a Mathematica notebook** — you evaluate one
+Calculemus is built for working **in a Mathematica notebook** — you evaluate one
 cell at a time, see the derivation grow, and decide the next move from what's in
 front of you. This page walks through that workflow from scratch.
 
@@ -11,17 +11,17 @@ front of you. This page walks through that workflow from scratch.
   ```mathematica
   PacletInstall["NCAlgebra"]
   ```
-  FormalCalc loads it automatically (banner suppressed). Only the matrix / non-commutative features need it; everything else works without it.
+  Calculemus loads it automatically (banner suppressed). Only the matrix / non-commutative features need it; everything else works without it.
 
 ## Loading it
 
 In a fresh notebook, evaluate one cell (`⇧↵`) at the top:
 
 ```mathematica
-Get["/path/to/mathematica-toolkit/Kernel/FormalCalc.wl"]
+Get["/path/to/mathematica-toolkit/Kernel/Calculemus.wl"]
 ```
 
-That brings the general-purpose core into the `` FormalCalc` `` context. A
+That brings the general-purpose core into the `` Calculemus` `` context. A
 field-specific pack (e.g. Gaussian) is **not** loaded by the core — add it only if
 you need it:
 

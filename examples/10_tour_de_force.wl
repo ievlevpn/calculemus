@@ -13,7 +13,7 @@
    are symbolic / via Gamma and Zeta).
    ============================================================================ *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "util.wl"}]];
 
 compute[dint[x^(s - 1)/(E^x - 1), {x, 0, Infinity}], Assumptions -> s > 1];

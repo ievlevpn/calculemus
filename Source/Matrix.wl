@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-(* FormalCalc Matrix (Layer 1, §3 + §4.6): non-commutative / matrix algebra.
+(* Calculemus Matrix (Layer 1, §3 + §4.6): non-commutative / matrix algebra.
    Thin layer over NCAlgebra (tp/aj/inv/** used directly) that adds what
    NCAlgebra lacks: a graded NC Neumann inverse, integration into the
    Derivation chain, and RANDOM-MATRIX verification wired into certify.
@@ -9,7 +9,7 @@
    clashes with ordinary scalar variable names, so we DO NOT use CommutativeQ
    to route work. NC status is tracked explicitly via ncDeclare. Ordinary
    Times/Plus/Simplify on those symbols still behave commutatively, so the
-   scalar modules are unaffected. Loaded inside FormalCalc`Private`. *)
+   scalar modules are unaffected. Loaded inside Calculemus`Private`. *)
 
 $ncSyms = {};   (* all declared NC symbols (matrices + vectors) *)
 $ncVecs = {};   (* the subset that are (column) vectors, for shape-aware probing *)

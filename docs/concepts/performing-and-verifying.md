@@ -1,6 +1,6 @@
 # Performing & verifying
 
-FormalCalc is built to **perform** transformations, not merely to certify ones you
+Calculemus is built to **perform** transformations, not merely to certify ones you
 typed by hand. The verification is a silent safety net underneath — valuable, but
 not the product.
 

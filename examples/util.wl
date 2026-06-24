@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-(* Shared display helper for the examples. Load AFTER the FormalCalc package.
+(* Shared display helper for the examples. Load AFTER the Calculemus package.
    Prints a derivation as a readable, verified chain. *)
 
 showChain[title_, d_Derivation] := Module[{a = First[d]},

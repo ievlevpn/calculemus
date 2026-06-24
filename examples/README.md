@@ -1,4 +1,4 @@
-# FormalCalc — examples gallery
+# Calculemus — examples gallery
 
 Real computations done **semi-automatically**: you guide with a few
 easy-to-read commands, the CAS performs the algebra, and every step is verified

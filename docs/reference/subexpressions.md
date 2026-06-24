@@ -3,7 +3,7 @@
 The everyday pain in any CAS: you *see* a subexpression but can't easily *address*
 it, because the tree (and `FullForm`) don't match your eye — `eˣ` is
 `Power[E, x]`, `√x` is `Power[x, 1/2]`, `a/b` is `Times[a, Power[b, -1]]`.
-FormalCalc lets you point at a piece the way you'd say it.
+Calculemus lets you point at a piece the way you'd say it.
 
 ## Locators — *where*
 

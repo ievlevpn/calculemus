@@ -1,8 +1,8 @@
 (* ::Package:: *)
 
-(* FormalCalc Series (Layer 1, §4.3-4.5): graded weighted truncation,
+(* Calculemus Series (Layer 1, §4.3-4.5): graded weighted truncation,
    series expansion to weighted order, and o/O bookkeeping markers.
-   Loaded inside FormalCalc`Private`.
+   Loaded inside Calculemus`Private`.
 
    A *grading* assigns each "small" generator a positive weight. The weight
    of a monomial Prod g_i^p_i is Sum p_i*w_i. Truncation keeps monomials of

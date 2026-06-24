@@ -12,7 +12,7 @@
    numerical quadrature at random a, b.
    ============================================================================ *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "util.wl"}]];
 
 (* Part A - complete the square in the exponent (you just say "complete it") *)

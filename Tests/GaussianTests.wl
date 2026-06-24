@@ -1,11 +1,11 @@
 (* ::Package:: *)
 
-(* FormalCalc`Gaussian` DOMAIN-PACK self-checks. Loads the general core, then the
+(* Calculemus`Gaussian` DOMAIN-PACK self-checks. Loads the general core, then the
    separate Gaussian context on top.
      wolframscript -file Tests/GaussianTests.wl  *)
 
 dir = DirectoryName[$InputFileName];
-Get[FileNameJoin[{dir, "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{dir, "..", "Kernel", "Calculemus.wl"}]];
 Get[FileNameJoin[{dir, "..", "Source", "Domain", "Gaussian.wl"}]];
 
 ClearAll[assert];
@@ -15,7 +15,7 @@ assert[cond_, label_: ""] := If[TrueQ[cond], $passed++,
 $passed = 0;
 
 (* the domain symbols live in their own context, NOT in the core *)
-assert[Context[gaussExp] === "FormalCalc`Gaussian`", "gaussExp is in the domain context"];
+assert[Context[gaussExp] === "Calculemus`Gaussian`", "gaussExp is in the domain context"];
 
 ncDeclareSym[cov]; ncDeclareVec[xx, yy];
 

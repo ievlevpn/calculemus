@@ -1,9 +1,9 @@
 (* ::Package:: *)
 
-(* FormalCalc general expression-algebra self-checks.
+(* Calculemus general expression-algebra self-checks.
      wolframscript -file Tests/ExprTests.wl  *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 
 ClearAll[assert];
 SetAttributes[assert, HoldFirst];

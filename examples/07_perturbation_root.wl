@@ -12,7 +12,7 @@
    back in, the residual vanishes through the claimed order (a graded ~ check).
    ============================================================================ *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "util.wl"}]];
 
 eqn    = x - 1 - eps x^3;                 (* solve eqn == 0,  x(0) = 1 *)

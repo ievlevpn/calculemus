@@ -1,8 +1,8 @@
-# FormalCalc
+# Calculemus
 
 **Verifiable, step-by-step formal manipulation in Mathematica.**
 
-FormalCalc is a Mathematica toolkit for the long computations you'd normally do on
+Calculemus is a Mathematica toolkit for the long computations you'd normally do on
 paper — page after page — except you do them **in a notebook**, one cell at a
 time, and the CAS *performs* each move and *checks* it. One unnoticed slip on page
 3 no longer quietly ruins everything after it. It targets work where you want
@@ -20,7 +20,7 @@ Open a notebook, load the package, and evaluate these as **separate cells**
 (`⇧↵`). A genuinely hard improper integral, one verified line per cell:
 
 ```mathematica
-Get["/path/to/mathematica-toolkit/Kernel/FormalCalc.wl"]    (* once, at the top *)
+Get["/path/to/mathematica-toolkit/Kernel/Calculemus.wl"]    (* once, at the top *)
 
 compute[ dint[x^3/(E^x - 1), {x, 0, Infinity}], Assumptions -> x > 0 ]
 by[ rewrite[1/(E^x - 1) -> sum[E^(-k x), {k, 1, Infinity}]], "geometric series" ]

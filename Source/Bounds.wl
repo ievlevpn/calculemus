@@ -1,7 +1,7 @@
 (* ::Package:: *)
 
-(* FormalCalc Bounds (Layer 1, §9): sign/positivity certificates and
-   single-quantity bounding transforms. Loaded inside FormalCalc`Private`. *)
+(* Calculemus Bounds (Layer 1, §9): sign/positivity certificates and
+   single-quantity bounding transforms. Loaded inside Calculemus`Private`. *)
 
 (* ============================================================ *)
 (* Sign / positivity certificate (§9.7)                         *)

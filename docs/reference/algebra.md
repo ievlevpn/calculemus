@@ -58,5 +58,5 @@ wrong manipulation under the abbreviation — e.g. claiming `s^2 -> s^3` — is 
 !!! note "Native operations"
     For `Expand`, `Factor`, `Collect`, `Apart`, `Together`, `Simplify`, etc., just
     use the Wolfram built-ins directly as transforms — `step[d, Factor]`,
-    `step[d, Together]` — and they are verified like any other step. FormalCalc
+    `step[d, Together]` — and they are verified like any other step. Calculemus
     only adds the moves the built-ins don't provide cleanly.

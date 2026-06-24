@@ -1,10 +1,10 @@
 (* ::Package:: *)
 
-(* FormalCalc core self-checks. Run headless:
+(* Calculemus core self-checks. Run headless:
      wolframscript -file Tests/CoreTests.wl
    Exits nonzero on first failure. *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 
 ClearAll[assert];
 SetAttributes[assert, HoldFirst];

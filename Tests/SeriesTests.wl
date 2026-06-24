@@ -1,9 +1,9 @@
 (* ::Package:: *)
 
-(* FormalCalc series / graded-asymptotics self-checks.
+(* Calculemus series / graded-asymptotics self-checks.
      wolframscript -file Tests/SeriesTests.wl  *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 
 ClearAll[assert];
 SetAttributes[assert, HoldFirst];

@@ -1,6 +1,6 @@
 # Notation & workflow
 
-FormalCalc offers two ways to drive a computation. They share the same engine and
+Calculemus offers two ways to drive a computation. They share the same engine and
 the same verification — pick whichever reads better for the task.
 
 ## Tactic mode (paper style)

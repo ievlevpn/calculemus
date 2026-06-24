@@ -1,7 +1,7 @@
 (* ::Package:: *)
 
-(* FormalCalc Expr (Layer 1, §1-§2): general-purpose expression algebra.
-   Nothing domain-specific lives here. Loaded in FormalCalc`Private`. *)
+(* Calculemus Expr (Layer 1, §1-§2): general-purpose expression algebra.
+   Nothing domain-specific lives here. Loaded in Calculemus`Private`. *)
 
 (* §1.1 abbreviation: name a subexpression w := expr, work with w, restore later.
    The definition w -> expr is recorded on the derivation; verification expands it,

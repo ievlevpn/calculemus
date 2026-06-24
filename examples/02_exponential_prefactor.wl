@@ -15,7 +15,7 @@
    then builds A annihilating it), then checks the value really is 0.
    ============================================================================ *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "util.wl"}]];
 
 ncDeclare[A];        (* a matrix with the optimality property A w = 0 *)

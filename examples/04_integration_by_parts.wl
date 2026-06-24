@@ -11,7 +11,7 @@
    Also shown: a change of variables where the new limits are SOLVED for you.
    ============================================================================ *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "util.wl"}]];
 
 (* You guide: "by parts with u = x^2", then "by parts with u = 2x". *)

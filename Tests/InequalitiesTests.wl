@@ -1,9 +1,9 @@
 (* ::Package:: *)
 
-(* FormalCalc inequality-system self-checks.
+(* Calculemus inequality-system self-checks.
      wolframscript -file Tests/InequalitiesTests.wl  *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 
 ClearAll[assert];
 SetAttributes[assert, HoldFirst];

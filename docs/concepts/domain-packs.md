@@ -1,17 +1,17 @@
 # Core vs domain packs
 
-FormalCalc draws a hard line between **general-purpose mathematics** and material
+Calculemus draws a hard line between **general-purpose mathematics** and material
 **overly specific to one field**.
 
-- The **`` FormalCalc` `` core** is general math only: relations & verification,
+- The **`` Calculemus` `` core** is general math only: relations & verification,
   general algebra, series & asymptotics, non-commutative / matrix algebra, formal
   integrals and sums, bounds.
-- A **domain pack** lives in its own context (e.g. `` FormalCalc`Gaussian` ``) that
+- A **domain pack** lives in its own context (e.g. `` Calculemus`Gaussian` ``) that
   the core does **not** load. You bring it in explicitly, on top of the core.
 
 ```mathematica
-Get[".../Kernel/FormalCalc.wl"];          (* general toolkit *)
-Get[".../Source/Domain/Gaussian.wl"];     (* FormalCalc`Gaussian`, on top *)
+Get[".../Kernel/Calculemus.wl"];          (* general toolkit *)
+Get[".../Source/Domain/Gaussian.wl"];     (* Calculemus`Gaussian`, on top *)
 ```
 
 ## The litmus test
@@ -26,13 +26,13 @@ Worked through for the Gaussian material:
 | `completeSquare` (scalar) | general algebra | core — `Expr` |
 | `quadForm`, `completeSquareMat` | general matrix algebra | core — `Matrix` |
 | `gaussianIntegral` | a general calculus identity | core — `Integral` |
-| `gaussExp`, `prefactorExponent` | **probabilistic objects** (log-densities) | pack — `FormalCalc`Gaussian` |
+| `gaussExp`, `prefactorExponent` | **probabilistic objects** (log-densities) | pack — `Calculemus`Gaussian` |
 | Slepian / Borell–TIS / Piterbarg | **named process theorems** | pack (future) |
 
 You can confirm the separation at runtime:
 
 ```mathematica
-Context[gaussExp]   (* "FormalCalc`Gaussian`"  -- not in the core *)
+Context[gaussExp]   (* "Calculemus`Gaussian`"  -- not in the core *)
 ```
 
 ## Why packs need no special access
@@ -52,7 +52,7 @@ the general library.
 !!! tip "Writing your own pack"
     A pack is an ordinary package that depends on the core:
     ```mathematica
-    BeginPackage["FormalCalc`MyField`", {"FormalCalc`", "NonCommutativeMultiply`"}];
+    BeginPackage["Calculemus`MyField`", {"Calculemus`", "NonCommutativeMultiply`"}];
     myMove::usage = "...";
     Begin["`Private`"];
     myMove[args__] := (* return an expression or Yields[...] *);

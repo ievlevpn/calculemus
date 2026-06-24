@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-(* FormalCalc — verifiable step-by-step formal manipulation.
+(* Calculemus — verifiable step-by-step formal manipulation.
    Master loader: declares the public API, then loads the implementation
    files into the private context. See notes/architecture.md. *)
 
@@ -12,7 +12,7 @@
 NCAlgebra`Private`$NCAlgebra$Loaded = True;
 Quiet@Needs["NCAlgebra`"];
 
-BeginPackage["FormalCalc`", {"NonCommutativeMultiply`", "NCReplace`"}];
+BeginPackage["Calculemus`", {"NonCommutativeMultiply`", "NCReplace`"}];
 
 (* ---- Derivation: the relation-chain object (Layer 2) ---- *)
 derive::usage        = "derive[expr] starts a derivation from expr. derive[expr, Assumptions -> asm] attaches assumptions used to verify every step.";
@@ -73,7 +73,7 @@ littleO::usage        = "littleO[scale] marks an omitted term of order o(scale).
 bigO::usage           = "bigO[scale] marks an omitted term of order O(scale). Idempotent under addition; absorbs littleO[scale] and nonzero numeric factors.";
 
 (* ---- Non-commutative / matrix algebra (Layer 1, §3 + §4.6) ---- *)
-ncDeclare::usage      = "ncDeclare[a, b, ...] marks symbols as non-commutative matrices/operators for both NCAlgebra and FormalCalc's verification. Multi-letter symbols must be declared; NCAlgebra treats single lowercase letters as non-commutative already.";
+ncDeclare::usage      = "ncDeclare[a, b, ...] marks symbols as non-commutative matrices/operators for both NCAlgebra and Calculemus's verification. Multi-letter symbols must be declared; NCAlgebra treats single lowercase letters as non-commutative already.";
 ncDeclareVec::usage   = "ncDeclareVec[v, ...] marks symbols as (column) vectors, so random-matrix verification gives them shape dim x 1 (and tp[v] shape 1 x dim).";
 neumannInverse::usage = "neumannInverse[s, e, n] is the order-n Neumann truncation of inv[s - e] = Sum_{k=0}^n (inv[s]**e)^k ** inv[s], treating e as the small (weight-1) generator.";
 expandInverse::usage  = "expandInverse[s, e, n] is the transform replacing inv[s-e] by its order-n Neumann truncation, asserting a ~ step (auto-verified via random-matrix order probe when the derivation carries Grading -> {e -> 1}, GradingOrder -> n).";

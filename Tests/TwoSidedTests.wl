@@ -1,9 +1,9 @@
 (* ::Package:: *)
 
-(* FormalCalc two-sided (in)equation self-checks.
+(* Calculemus two-sided (in)equation self-checks.
      wolframscript -file Tests/TwoSidedTests.wl  *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 
 ClearAll[assert];
 SetAttributes[assert, HoldFirst];

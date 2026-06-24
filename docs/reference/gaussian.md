@@ -1,7 +1,7 @@
 # Reference — Gaussian pack (domain)
 
 !!! warning "A domain pack, not the core"
-    These symbols live in the **separate** context `` FormalCalc`Gaussian` ``,
+    These symbols live in the **separate** context `` Calculemus`Gaussian` ``,
     which the general core does **not** load. Bring it in explicitly:
     ```mathematica
     Get[".../Source/Domain/Gaussian.wl"];

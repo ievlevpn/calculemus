@@ -1,9 +1,9 @@
 (* ::Package:: *)
 
-(* FormalCalc non-commutative / matrix self-checks.
+(* Calculemus non-commutative / matrix self-checks.
      wolframscript -file Tests/MatrixTests.wl  *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 
 ClearAll[assert];
 SetAttributes[assert, HoldFirst];

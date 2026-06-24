@@ -13,7 +13,7 @@
    graded ~ check, and the coefficients turn out to be exactly the LegendreP_n.
    ============================================================================ *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "util.wl"}]];
 
 (* t is the small generator (weight 1); expand to 3rd order. *)

@@ -3,7 +3,7 @@
 Non-commutative / matrix algebra (`Source/Matrix.wl`), with
 [NCAlgebra](https://github.com/NCAlgebra/NC) as the backend. NCAlgebra's notation
 is used directly: `**` (non-commutative product), `tp` (transpose), `aj`
-(adjoint), `inv` (inverse), `NCExpand`, `NCCollect`, … FormalCalc adds graded
+(adjoint), `inv` (inverse), `NCExpand`, `NCCollect`, … Calculemus adds graded
 expansions, side-relation application, and **random-matrix verification**.
 
 ## Declaring symbols

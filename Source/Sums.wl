@@ -1,9 +1,9 @@
 (* ::Package:: *)
 
-(* FormalCalc Sums (Layer 1, §5): formal manipulation of sums held as
+(* Calculemus Sums (Layer 1, §5): formal manipulation of sums held as
    Inactive[Sum]. Pure rewrites, never evaluated. Verification: finite sums
    Activate to explicit term sums, so Simplify proves the equality; a numeric
-   probe (random params) backs it up. Loaded in FormalCalc`Private`. *)
+   probe (random params) backs it up. Loaded in Calculemus`Private`. *)
 
 sum[f_, {k_, a_, b_}] := Inactive[Sum][f, {k, a, b}];
 

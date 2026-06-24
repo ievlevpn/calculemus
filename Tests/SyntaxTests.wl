@@ -1,9 +1,9 @@
 (* ::Package:: *)
 
-(* FormalCalc natural-syntax self-checks (tactic mode, verbs, >op> operator).
+(* Calculemus natural-syntax self-checks (tactic mode, verbs, >op> operator).
      wolframscript -file Tests/SyntaxTests.wl  *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 
 ClearAll[assert];
 SetAttributes[assert, HoldFirst];

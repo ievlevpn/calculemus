@@ -1,9 +1,9 @@
 (* ::Package:: *)
 
-(* FormalCalc subexpression-addressing self-checks.
+(* Calculemus subexpression-addressing self-checks.
      wolframscript -file Tests/SubexprTests.wl  *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 
 ClearAll[assert];
 SetAttributes[assert, HoldFirst];

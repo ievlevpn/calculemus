@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-(* FormalCalc TwoSided (Layer 1/2, §9.2): a two-sided (in)equation  L R M  that
+(* Calculemus TwoSided (Layer 1/2, §9.2): a two-sided (in)equation  L R M  that
    you transform by applying the SAME operation to both sides. This is what the
    single-quantity Derivation cannot express - e.g. from  ln P <= B  derive
    P <= e^B  by applying exp to both sides.
@@ -8,7 +8,7 @@
    Each step asserts a new relation L' R' M' that must follow from L R M; it is
    verified as an IMPLICATION: sample points where the premise L R M holds and
    check the conclusion L' R' M' there (plus a symbolic Implies check).
-   Loaded in FormalCalc`Private`. *)
+   Loaded in Calculemus`Private`. *)
 
 $relHeads = Equal | LessEqual | GreaterEqual | Less | Greater;
 

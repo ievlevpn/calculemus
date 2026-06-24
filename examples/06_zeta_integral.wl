@@ -15,7 +15,7 @@
    evaluate the pieces, so the checks are symbolic, not just numeric).
    ============================================================================ *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "Calculemus.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "util.wl"}]];
 
 d = derive[dint[x^3/(E^x - 1), {x, 0, Infinity}], Assumptions -> x > 0];

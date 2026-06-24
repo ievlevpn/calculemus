@@ -1,10 +1,10 @@
 (* ::Package:: *)
 
-(* FormalCalc Integral (Layer 1, §6): formal manipulation of integrals held as
+(* Calculemus Integral (Layer 1, §6): formal manipulation of integrals held as
    Inactive[Integrate]. Nothing is evaluated; transforms are pure rewrites.
    Verification is by numeric quadrature: substitute random values for the free
    parameters, map Inactive[Integrate] -> NIntegrate, and compare both sides
-   (the integral analog of the random-matrix probe). Loaded in FormalCalc`Private`. *)
+   (the integral analog of the random-matrix probe). Loaded in Calculemus`Private`. *)
 
 (* constructors *)
 dint[f_, {x_, a_, b_}] := Inactive[Integrate][f, {x, a, b}];
