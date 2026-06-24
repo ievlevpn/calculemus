@@ -18,8 +18,8 @@
 Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "Kernel", "FormalCalc.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "util.wl"}]];
 
-d = derive[Inactive[Integrate][x^3/(E^x - 1), {x, 0, Infinity}], Assumptions -> x > 0];
-d = step[d, rewrite[1/(E^x - 1) -> Inactive[Sum][E^(-k x), {k, 1, Infinity}]],
+d = derive[dint[x^3/(E^x - 1), {x, 0, Infinity}], Assumptions -> x > 0];
+d = step[d, rewrite[1/(E^x - 1) -> sum[E^(-k x), {k, 1, Infinity}]],
      "geometric series:  1/(e^x - 1) = Sum_{k>=1} e^{-k x}"];
 d = step[d, swapSumIntegral,
      "swap the sum and the integral"];

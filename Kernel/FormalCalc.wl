@@ -100,6 +100,7 @@ assume::usage             = "assume[lhs -> rhs, relation, conditions] applies an
 inequalities::usage       = "inequalities[] lists the registered inequalities (name, relation, description).";
 
 (* ---- Two-sided (in)equations (Layer 1/2, §9.2) ---- *)
+TwoSided::usage    = "TwoSided[<|...|>] is an immutable two-sided (in)equation value. Build with relate; advance with stepBoth.";
 relate::usage      = "relate[L, R, M] (or relate[L <= M], etc.) starts a two-sided (in)equation L R M. Apply the same operation to both sides with stepBoth.";
 stepBoth::usage    = "stepBoth[obj, op] (or curried stepBoth[op]) applies operation op to BOTH sides of a two-sided relation, verifying the new relation follows from the old. Ops: addBoth, subtractBoth, mulBoth, applyBoth, rewriteBoth.";
 addBoth::usage     = "addBoth[c] adds c to both sides.";
