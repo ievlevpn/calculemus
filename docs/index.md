@@ -2,36 +2,46 @@
 
 **Verifiable, step-by-step formal manipulation in Mathematica.**
 
-FormalCalc is a Wolfram Language toolkit for doing complicated algebraic and
-analytic computations the way you'd do them on paper — one transformation at a
-time — except the CAS *performs* each move and *checks* it for you. It targets
-the kind of work where you don't need numeric evaluation, only correct formal
-manipulation: series and asymptotic expansions, formal integrals and sums,
-non-commutative / matrix algebra, and chains of inequalities.
+FormalCalc is a Mathematica toolkit for the long computations you'd normally do on
+paper — page after page — except you do them **in a notebook**, one cell at a
+time, and the CAS *performs* each move and *checks* it. One unnoticed slip on page
+3 no longer quietly ruins everything after it. It targets work where you want
+correct formal manipulation, not numeric evaluation: series and asymptotic
+expansions, formal integrals and sums, non-commutative / matrix algebra, and
+chains of inequalities.
 
 !!! quote "The idea in one line"
-    You guide the computation with short, readable commands; the CAS does the
-    algebra and verifies every step; the resulting **derivation is the proof**.
+    In each notebook cell you name a move; the CAS does the algebra and verifies
+    it; the cell shows the derivation so far, and that **derivation is the proof**.
 
 ## A first taste
 
-A genuinely hard improper integral, in three guided steps — each verified:
+Open a notebook, load the package, and evaluate these as **separate cells**
+(`⇧↵`). A genuinely hard improper integral, one verified line per cell:
 
 ```mathematica
-Get["/path/to/mathematica-toolkit/Kernel/FormalCalc.wl"];
+Get["/path/to/mathematica-toolkit/Kernel/FormalCalc.wl"]    (* once, at the top *)
 
 compute[ dint[x^3/(E^x - 1), {x, 0, Infinity}], Assumptions -> x > 0 ]
 by[ rewrite[1/(E^x - 1) -> sum[E^(-k x), {k, 1, Infinity}]], "geometric series" ]
 by[ fubini ]
 by[ evaluate ]
+```
 
+Each cell returns a **live `Derivation` panel** — click ▸ to expand the full
+annotated chain, with a ✓ on every verified line. Read off the answer:
+
+```mathematica
 result[goal[]]     (* Pi^4/15 *)
 verifiedQ[goal[]]  (* True    *)
 ```
 
-You supplied the one insight (the geometric series). The CAS swapped the sum and
-integral, integrated each term, summed the series, and verified each line —
-written just like a hand derivation, one `by[…]` per line.
+You supplied the one insight (the geometric series); the CAS swapped the sum and
+integral, integrated each term, summed the series, and verified every line —
+written just like the margin of a hand derivation, one `by[…]` per cell.
+
+→ New here? Start with **[Getting started](getting-started.md)** for the full
+notebook walkthrough.
 
 ## What makes it different
 
