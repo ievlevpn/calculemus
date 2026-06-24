@@ -76,4 +76,16 @@ and `a^2 ≥ 0` is confirmed before the drop is accepted.
 3. **Read the chain** — `result`, `relationOf`, `verifiedQ`, `stepsOf`. The
    `Derivation` *is* the proof.
 
+## Notebook assistance
+
+Once loaded in a notebook you get, automatically:
+
+- **Autocomplete** of the function names (type `comp`⇥ → `compute`, `completeSquare`, …), each with its one-line description from the usage message.
+- **Tooltips** — hover, `?function`, or ⌘⇧K shows what a function does and its arguments.
+- **Argument hints + checking** — typing `compute[` shows the argument layout, and a wrong number of arguments is highlighted (via `SyntaxInformation`).
+- **Value suggestions** — typing `useIneq["` pops up the registered inequality names; and `Esc |> Esc` enters the `▷` chaining operator.
+
+The last two need a notebook front-end; they install automatically there, and are
+a no-op under `wolframscript`. Re-run `installAssistance[]` if needed.
+
 Continue with **[The derivation chain](concepts/derivations.md)**.
