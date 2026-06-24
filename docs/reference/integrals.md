@@ -51,10 +51,21 @@ derive[dint[x^2 Exp[x], {x, 0, 1}]] // step[ibp[x^2]]
 (* E - Int 2 x Exp[x]  -- boundary term and the (held) remainder *)
 ```
 
-## `splitDomain`
+## `gather` — the inverse of `linearity`
+
+Pull constant factors back inside and combine integrals over the **same domain**
+into one (the "collect under the integral" move):
 
 ```mathematica
-splitDomain[c]   (* Int_a^b -> Int_a^c + Int_c^b *)
+derive[a dint[x, {x, 0, 1}] + b dint[x^2, {x, 0, 1}]] // step[gather]
+(* Int_0^1 (a x + b x^2) dx *)
+```
+
+## `splitDomain` / `reverseLimits`
+
+```mathematica
+splitDomain[c]   (* Int_a^b -> Int_a^c + Int_c^b      *)
+reverseLimits    (* Int_a^b f -> - Int_b^a f          *)
 ```
 
 ## `swapSumIntegral`
