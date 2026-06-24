@@ -41,41 +41,6 @@ swapSum := Function[cur,
 (* ============================================================ *)
 sumExprQ[e_] := ! FreeQ[e, Inactive[Sum]];
 
-sumIndexVars[e_] := DeleteDuplicates@Cases[e, Inactive[Sum][_, {v_, _, _}] :> v, {0, Infinity}];
-sumParams[e_] := Complement[
-  DeleteDuplicates@Cases[e, s_Symbol /; (Context[s] =!= "System`" && ! NumericQ[s]), {0, Infinity}],
-  sumIndexVars[e]];
-
-(* symbolic: Activate the (finite) sums and prove the difference is 0 *)
-sumSymZero[before_, after_, asm_] := TrueQ@Quiet@TimeConstrained[
-  Simplify[Activate[before] - Activate[after], asm] === 0, 5, False];
-
-(* symbols appearing in summation BOUNDS (e.g. the n in Sum_{i=1}^n) - these must
-   be tested at concrete INTEGER dimensions, not real values. *)
-sumBoundSyms[e_] := DeleteDuplicates@Cases[
-  Cases[e, Inactive[Sum][_, {_, lo_, hi_}] :> {lo, hi}, {0, Infinity}],
-  s_Symbol /; Context[s] =!= "System`", {0, Infinity}];
-
-(* numeric: test at several concrete dimensions (bound symbols -> small integers,
-   so Sum_{i=1}^n becomes a finite sum) and random reals for the other params. *)
-sumProbe[before_, after_, rel_, asm_, trials_: 8] := Module[{bsyms, vparams, res, tol = 10.^-6},
-  bsyms = sumBoundSyms[{before, after}];
-  vparams = Complement[Union[sumParams[before], sumParams[after]], bsyms];
-  res = Table[
-    Module[{sub, bn, an},
-      sub = Join[(# -> RandomInteger[{2, 6}]) & /@ bsyms, (# -> RandomReal[{0.4, 2.2}]) & /@ vparams];
-      Quiet@Check[
-        bn = N[Activate[before] /. sub]; an = N[Activate[after] /. sub];
-        numericRelHolds[rel, bn, an, tol], $bad]],
-    {trials}];
-  res = DeleteCases[res, $bad | Indeterminate];
-  Which[res === {}, Unknown, MemberQ[res, False], False, True, True]
-];
-
-sumCertify[before_, after_, rel_, asm_] := Module[{sz, pr, status},
-  sz = rel === Equal && sumSymZero[before, after, asm];
-  pr = sumProbe[before, after, rel, asm];
-  status = Which[pr === False, "Refuted", sz, "Verified", pr === True, "NumericOnly", True, "Unverified"];
-  <|"relation" -> rel, "symbolic" -> If[sz, True, Unknown],
-    "numeric" -> <|"verdict" -> pr|>, "status" -> status|>
-];
+(* verification (incl. symbolic dimension n, infinite sums, and mixed sum+integral)
+   is the unified inactiveCertify from the Integral module. *)
+sumCertify[before_, after_, rel_, asm_] := inactiveCertify[before, after, rel, asm];

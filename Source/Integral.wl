@@ -87,37 +87,53 @@ swapSumIntegral := Function[cur, cur /. {
 (* ============================================================ *)
 intExprQ[e_] := ! FreeQ[e, Inactive[Integrate]];
 
-intVars[e_] := DeleteDuplicates@Join[
-  Cases[e, Inactive[Integrate][_, {v_, _, _}] :> v, {0, Infinity}],
+(* ---- unified verification of held integrals AND/OR sums (incl. mixed, infinite,
+   and symbolic ranges).  Used by both intCertify and sumCertify. ---- *)
+
+(* bound, summation, and integration variables (excluded from free parameters) *)
+inactiveVars[e_] := DeleteDuplicates@Join[
+  Cases[e, (Inactive[Integrate] | Inactive[Sum])[_, {v_, _, _}] :> v, {0, Infinity}],
   Cases[e, Inactive[Integrate][_, v_Symbol] :> v, {0, Infinity}]];
 
-intParams[e_] := Complement[
+(* symbols in SUM bounds must be tested at integer dimensions, not reals *)
+inactiveBoundSyms[e_] := DeleteDuplicates@Cases[
+  Cases[e, Inactive[Sum][_, {_, lo_, hi_}] :> {lo, hi}, {0, Infinity}],
+  s_Symbol /; Context[s] =!= "System`", {0, Infinity}];
+
+inactiveParams[e_] := Complement[
   DeleteDuplicates@Cases[e, s_Symbol /; (Context[s] =!= "System`" && ! NumericQ[s]), {0, Infinity}],
-  intVars[e]];
+  inactiveVars[e]];
 
-(* symbolic: Activate and try to prove the difference is 0 (time-bounded) *)
-intSymZero[before_, after_, asm_] := TrueQ@Quiet@TimeConstrained[
-  Simplify[Activate[before] - Activate[after], asm] === 0, 5, False];
+(* one numeric value at a sample point: Activate (symbolic eval, e.g. Gamma/Zeta)
+   then N; failing that, map to NSum/NIntegrate. *)
+inactiveValue[expr_, sub_] := Module[{v},
+  v = Quiet@TimeConstrained[N[Activate[expr] /. sub], 4, $bad];
+  If[NumericQ[v], v,
+    Quiet@TimeConstrained[
+      N[(expr /. sub) /. {Inactive[Sum] -> NSum, Inactive[Integrate] -> NIntegrate}], 6, $bad]]];
 
-(* numeric: random params, Inactive[Integrate] -> NIntegrate, check `before rel after` *)
-integralProbe[before_, after_, rel_, asm_, trials_: 6] := Module[{params, res, tol = 10.^-5},
-  params = Union[intParams[before], intParams[after]];
+inactiveSamples[before_, after_, asm_, m_] := Module[{bsyms, vparams, draw, pts},
+  bsyms = inactiveBoundSyms[{before, after}];
+  vparams = Complement[Union[inactiveParams[before], inactiveParams[after]], bsyms];
+  draw := Join[(# -> RandomInteger[{2, 5}]) & /@ bsyms, (# -> RandomReal[{0.5, 2.5}]) & /@ vparams];
+  pts = Select[Table[draw, {4 m}], (asm === True || TrueQ[asm /. #]) &];
+  If[pts === {}, Table[draw, {m}], Take[pts, UpTo[m]]]];
+
+inactiveProbe[before_, after_, rel_, asm_] := Module[{res, tol = 10.^-4},
   res = Table[
-    Module[{sub = (# -> RandomReal[{0.4, 2.2}]) & /@ params, bn, an},
-      Quiet@Check[
-        bn = N[(before /. sub) /. Inactive[Integrate] -> NIntegrate];
-        an = N[(after /. sub) /. Inactive[Integrate] -> NIntegrate];
-        numericRelHolds[rel, bn, an, tol], $bad]],
-    {trials}];
-  res = DeleteCases[res, $bad | Indeterminate];
-  Which[res === {}, Unknown, MemberQ[res, False], False, True, True]
-];
+    Module[{bn = inactiveValue[before, pt], an = inactiveValue[after, pt]},
+      If[bn === $bad || an === $bad || ! NumericQ[bn] || ! NumericQ[an], Indeterminate,
+         numericRelHolds[rel, bn, an, tol]]],
+    {pt, inactiveSamples[before, after, asm, 8]}];
+  res = DeleteCases[res, Indeterminate];
+  Which[res === {}, Unknown, MemberQ[res, False], False, True, True]];
 
-(* equality is also checked symbolically (Activate); inequalities by the probe. *)
-intCertify[before_, after_, rel_, asm_] := Module[{sz, pr, status},
-  sz = rel === Equal && intSymZero[before, after, asm];
-  pr = integralProbe[before, after, rel, asm];
+inactiveCertify[before_, after_, rel_, asm_] := Module[{sz, pr, status},
+  sz = rel === Equal && TrueQ@Quiet@TimeConstrained[
+    Simplify[Activate[before] - Activate[after], asm] === 0, 6, False];
+  pr = inactiveProbe[before, after, rel, asm];
   status = Which[pr === False, "Refuted", sz, "Verified", pr === True, "NumericOnly", True, "Unverified"];
   <|"relation" -> rel, "symbolic" -> If[sz, True, Unknown],
-    "numeric" -> <|"verdict" -> pr|>, "status" -> status|>
-];
+    "numeric" -> <|"verdict" -> pr|>, "status" -> status|>];
+
+intCertify[before_, after_, rel_, asm_] := inactiveCertify[before, after, rel, asm];
