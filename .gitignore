@@ -1,0 +1,5 @@
+# Wolfram
+*.nb.bak
+.wolframscript/
+# macOS
+.DS_Store
