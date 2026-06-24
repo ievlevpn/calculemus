@@ -19,6 +19,19 @@ linearity := Function[cur, cur //. {
   Inactive[Integrate][c_, {var_, lo_, hi_}] /; FreeQ[c, var] :> c (hi - lo)
 }];
 
+(* §6.1 / §5.4 gather: the INVERSE of linearity - pull constant factors back in
+   and combine integrals/sums over the same domain into a single one. *)
+gather := Function[cur, cur //. {
+  c_. Inactive[Integrate][f_, {x_, a_, b_}] /; (c =!= 1 && FreeQ[c, x]) :> Inactive[Integrate][c f, {x, a, b}],
+  Inactive[Integrate][f_, d_] + Inactive[Integrate][g_, d_] :> Inactive[Integrate][f + g, d],
+  c_. Inactive[Sum][f_, {k_, a_, b_}] /; (c =!= 1 && FreeQ[c, k]) :> Inactive[Sum][c f, {k, a, b}],
+  Inactive[Sum][f_, d_] + Inactive[Sum][g_, d_] :> Inactive[Sum][f + g, d]
+}];
+
+(* §6.5 reverse the limits of integration:  Int_a^b f = - Int_b^a f. *)
+reverseLimits := Function[cur,
+  cur /. Inactive[Integrate][f_, {x_, a_, b_}] :> -Inactive[Integrate][f, {x, b, a}]];
+
 (* §6.2 change of variables: old = phi(newvar). Jacobian D[phi] is inserted; new
    limits are SOLVED from phi(newvar) = old-limit (override with explicit {na,nb}). *)
 changeVar[newvar_, phi_, {na_, nb_}] := Function[cur,

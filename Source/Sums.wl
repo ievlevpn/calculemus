@@ -25,6 +25,12 @@ splitSum[m_] := Function[cur,
   cur /. Inactive[Sum][f_, {k_, a_, b_}] :>
     Inactive[Sum][f, {k, a, m}] + Inactive[Sum][f, {k, m + 1, b}]];
 
+(* §5.2 peel off the first / last term:  Sum_{k=a}^b f = f(a) + Sum_{k=a+1}^b f. *)
+peelFirst := Function[cur,
+  cur /. Inactive[Sum][f_, {k_, a_, b_}] :> (f /. k -> a) + Inactive[Sum][f, {k, a + 1, b}]];
+peelLast := Function[cur,
+  cur /. Inactive[Sum][f_, {k_, a_, b_}] :> Inactive[Sum][f, {k, a, b - 1}] + (f /. k -> b)];
+
 (* §5.3 interchange the order of two nested sums (Fubini), bounds independent *)
 swapSum := Function[cur,
   cur /. Inactive[Sum][Inactive[Sum][f_, {j_, c_, d_}], {k_, a_, b_}] :>
@@ -44,11 +50,20 @@ sumParams[e_] := Complement[
 sumSymZero[before_, after_, asm_] := TrueQ@Quiet@TimeConstrained[
   Simplify[Activate[before] - Activate[after], asm] === 0, 5, False];
 
-(* numeric: random reals for free params, Activate, compare *)
-sumProbe[before_, after_, asm_, trials_: 6] := Module[{params, res, tol = 10.^-6},
-  params = Union[sumParams[before], sumParams[after]];
+(* symbols appearing in summation BOUNDS (e.g. the n in Sum_{i=1}^n) - these must
+   be tested at concrete INTEGER dimensions, not real values. *)
+sumBoundSyms[e_] := DeleteDuplicates@Cases[
+  Cases[e, Inactive[Sum][_, {_, lo_, hi_}] :> {lo, hi}, {0, Infinity}],
+  s_Symbol /; Context[s] =!= "System`", {0, Infinity}];
+
+(* numeric: test at several concrete dimensions (bound symbols -> small integers,
+   so Sum_{i=1}^n becomes a finite sum) and random reals for the other params. *)
+sumProbe[before_, after_, asm_, trials_: 8] := Module[{bsyms, vparams, res, tol = 10.^-6},
+  bsyms = sumBoundSyms[{before, after}];
+  vparams = Complement[Union[sumParams[before], sumParams[after]], bsyms];
   res = Table[
-    Module[{sub = (# -> RandomReal[{0.4, 2.2}]) & /@ params, bn, an},
+    Module[{sub, bn, an},
+      sub = Join[(# -> RandomInteger[{2, 6}]) & /@ bsyms, (# -> RandomReal[{0.4, 2.2}]) & /@ vparams];
       Quiet@Check[
         bn = N[Activate[before] /. sub]; an = N[Activate[after] /. sub];
         If[NumericQ[bn] && NumericQ[an], Abs[an - bn] <= tol (1 + Abs[bn]), $bad],

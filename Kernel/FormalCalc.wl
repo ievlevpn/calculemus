@@ -92,6 +92,8 @@ ibp::usage       = "ibp[u, v] is the integration-by-parts transform: the integra
 splitDomain::usage = "splitDomain[c] splits a held definite integral at the interior point c.";
 swapSumIntegral::usage = "swapSumIntegral interchanges a held Inactive[Sum] and Inactive[Integrate] (either order).";
 gaussianIntegral::usage = "gaussianIntegral is the transform normalizing Int_{-inf}^{inf} Exp[quadratic in x] dx to its closed form (a general definite-integral identity).";
+gather::usage    = "gather is the inverse of linearity: it pulls constant factors back inside and combines integrals/sums over the same domain into a single one.";
+reverseLimits::usage = "reverseLimits rewrites Int_a^b f as - Int_b^a f.";
 
 (* ---- Formal sums (Layer 1, §5) ---- *)
 sum::usage          = "sum[f, {k, a, b}] is the held sum Inactive[Sum][f, {k, a, b}].";
@@ -99,6 +101,8 @@ sumLinearity::usage = "sumLinearity is the transform that splits held sums over 
 shiftIndex::usage   = "shiftIndex[c] reindexes a held sum k -> k-c, shifting the bounds by c.";
 splitSum::usage     = "splitSum[m] splits a held sum's range at the interior point m.";
 swapSum::usage      = "swapSum interchanges the order of two nested held sums (Fubini), assuming independent bounds.";
+peelFirst::usage    = "peelFirst splits off the first term of a held sum: Sum_{k=a}^b f = f(a) + Sum_{k=a+1}^b f.";
+peelLast::usage     = "peelLast splits off the last term of a held sum.";
 
 (* ---- Bounds (Layer 1, §9) ---- *)
 signOf::usage   = "signOf[expr] or signOf[expr, assumptions] returns Positive, Negative, NonNegative, NonPositive, or Unknown.";

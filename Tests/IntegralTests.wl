@@ -52,6 +52,15 @@ dSwap = derive[Inactive[Integrate][Inactive[Sum][g[k] x^k, {k, 0, 2}], {x, 0, 1}
         step[swapSumIntegral];
 assert[! FreeQ[result[dSwap], Inactive[Sum][Inactive[Integrate][__], _]], "sum pulled outside integral"];
 
+(* ---- gather: the inverse of linearity (combine same-domain integrals) ---- *)
+dG = derive[a dint[x, {x, 0, 1}] + b dint[x^2, {x, 0, 1}]] // step[gather];
+assert[FreeQ[result[dG], _Inactive + _Inactive] && ! FreeQ[result[dG], Inactive[Integrate]], "gather combined integrals"];
+assert[verifiedQ[dG], "gather integrals verified"];
+
+(* ---- reverse the limits of integration ---- *)
+dR = derive[dint[Sin[x], {x, 0, 1}]] // step[reverseLimits];
+assert[verifiedQ[dR], "reverseLimits verified"];
+
 (* ---- Gaussian integral normalization (general definite-integral identity) ---- *)
 dGI = derive[Inactive[Integrate][Exp[-a x^2 + m x], {x, -Infinity, Infinity}],
              Assumptions -> a > 0] // step[gaussianIntegral];
