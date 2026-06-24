@@ -36,7 +36,9 @@ symPart[a_]  := (a + tp[a])/2;
 antiPart[a_] := (a - tp[a])/2;
 
 (* §3.4 apply linear side relations (NC-aware, handles **-subproducts) *)
-applyRel[rules_] := Function[cur, NCReplaceAll[cur, rules]];
+applyRel[rules_List] := Function[cur, NCReplaceAll[cur, rules]];
+(* context-aware: read Relations from the derivation (set once) *)
+applyRel[] := WithContext[Function[{expr, ctx}, NCReplaceAll[expr, ctx["relations"]]]];
 
 (* an expression is "NC" if it uses **/tp/aj/inv or a declared NC symbol *)
 ncExprQ[e_] := ! FreeQ[e, NonCommutativeMultiply | tp | aj | inv] ||

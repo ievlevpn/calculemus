@@ -58,6 +58,12 @@ dPref = derive[tp[w] ** (A1 + tp[A1]) ** w, Relations -> rels] //
 assert[result[dPref] === 0, "prefactor vanishes"];
 assert[verifiedQ[dPref], "prefactor verified under A1 w = 0"];
 
+(* ---- context-aware: applyRel[] reads Relations from the derivation ---- *)
+dPref2 = derive[tp[w] ** (A1 + tp[A1]) ** w, Relations -> rels] //
+         step[NCExpand] // step[applyRel[]];
+assert[result[dPref2] === 0, "applyRel[] reads relations"];
+assert[verifiedQ[dPref2], "applyRel[] verified"];
+
 (* ---- refuted: claim w^T A1 w == w^T w; false, since w^T A1 w = 0 under A1 w = 0 ---- *)
 dPrefBad = Quiet@step[
    derive[tp[w] ** A1 ** w, Relations -> {A1 ** w -> 0}],

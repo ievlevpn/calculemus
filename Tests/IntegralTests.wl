@@ -39,6 +39,14 @@ dBad = Quiet@step[derive[dint[x^2, {x, 0, 1}]],
       Inactive[Integrate][f /. v -> 2 u, {u, 0, 1/2}]]];
 assert[stepsOf[dBad][[1]]["cert"]["status"] === "Refuted", "missing Jacobian refuted"];
 
+(* ---- change of variables with AUTO-SOLVED limits (no {na,nb} given) ---- *)
+dCauto = derive[dint[x^2, {x, 0, 1}]] // step[changeVar[u, 2 u]];
+assert[verifiedQ[dCauto], "changeVar auto-limits verified"];
+
+(* ---- integration by parts with AUTO-COMPUTED antiderivative (no v given) ---- *)
+dIauto = derive[dint[x Exp[x], {x, 0, 1}]] // step[ibp[x]];
+assert[verifiedQ[dIauto], "ibp auto-v verified"];
+
 (* ---- swap sum and integral ---- *)
 dSwap = derive[Inactive[Integrate][Inactive[Sum][g[k] x^k, {k, 0, 2}], {x, 0, 1}]] //
         step[swapSumIntegral];

@@ -45,6 +45,12 @@ assert[same[result[dN], 1/\[Sigma] + e/\[Sigma]^2 + e^2/\[Sigma]^3], "dN result"
 assert[relationOf[dN] === AsymEqual, "dN relation"];
 assert[stepsOf[dN][[1]]["cert"]["status"] === "Verified", "dN verified"];
 
+(* ---- context-aware: grading set once on the derivation, dropHigherOrder[] reads it ---- *)
+dCtx = derive[1/(\[Sigma] - e), Assumptions -> \[Sigma] > 0,
+             Grading -> {e -> 1}, GradingOrder -> 2] // step[dropHigherOrder[]];
+assert[same[result[dCtx], 1/\[Sigma] + e/\[Sigma]^2 + e^2/\[Sigma]^3], "dropHigherOrder[] reads grading"];
+assert[stepsOf[dCtx][[1]]["cert"]["status"] === "Verified", "dCtx verified"];
+
 (* ---- refuted ~ : dropping too much and claiming agreement to order 2 ---- *)
 dBad = Quiet@step[
    derive[1/(\[Sigma] - e), Assumptions -> \[Sigma] > 0,

@@ -57,6 +57,10 @@ seriesExpand[expr_, grading_, order_, asm_] := Module[
 dropHigherOrder[grading_, order_] :=
   Function[cur, Yields[seriesExpand[cur, grading, order], AsymEqual, "expand & drop higher-order"]];
 
+(* context-aware: read Grading / GradingOrder from the derivation (set once) *)
+dropHigherOrder[] := WithContext[Function[{expr, ctx},
+  Yields[seriesExpand[expr, ctx["grading"], ctx["order"]], AsymEqual, "expand & drop higher-order"]]];
+
 (* ============================================================ *)
 (* §4.4 minimal o / O bookkeeping markers                       *)
 (* ============================================================ *)

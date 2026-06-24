@@ -19,18 +19,33 @@ linearity := Function[cur, cur //. {
   Inactive[Integrate][c_, {var_, lo_, hi_}] /; FreeQ[c, var] :> c (hi - lo)
 }];
 
-(* §6.2 change of variables: old = phi(newvar), with Jacobian and new limits *)
+(* §6.2 change of variables: old = phi(newvar). Jacobian D[phi] is inserted; new
+   limits are SOLVED from phi(newvar) = old-limit (override with explicit {na,nb}). *)
 changeVar[newvar_, phi_, {na_, nb_}] := Function[cur,
   cur /. Inactive[Integrate][f_, {var_, lo_, hi_}] :>
     Inactive[Integrate][(f /. var -> phi) D[phi, newvar], {newvar, na, nb}]];
+changeVar::nolimit = "Could not solve `1` = `2` for the new variable; pass explicit limits.";
+changeVar[newvar_, phi_] := Function[cur,
+  cur /. Inactive[Integrate][f_, {var_, lo_, hi_}] :>
+    Module[{sa = Quiet@Solve[phi == lo, newvar], sb = Quiet@Solve[phi == hi, newvar]},
+      If[sa === {} || sb === {} || Head[sa] =!= List || Head[sb] =!= List,
+        (Message[changeVar::nolimit, phi, lo]; Inactive[Integrate][f, {var, lo, hi}]),
+        Inactive[Integrate][(f /. var -> phi) D[phi, newvar],
+          {newvar, newvar /. First[sa], newvar /. First[sb]}]]]];
 
-(* §6.3 integration by parts: integrand must be u * D[v]; boundary term + remainder *)
+(* §6.3 integration by parts. ibp[u, v]: integrand must be u * D[v]; emits the
+   boundary term u v | minus the remainder. ibp[u]: the antiderivative v of the
+   rest (integrand / D... ) is COMPUTED for you. *)
 ibp::mismatch = "Integrand does not equal u * D[v, x]; IBP not applied.";
 ibp[u_, v_] := Function[cur,
   cur /. Inactive[Integrate][integ_, {var_, lo_, hi_}] :>
     If[Simplify[integ - u D[v, var]] === 0,
       ((u v) /. var -> hi) - ((u v) /. var -> lo) - Inactive[Integrate][D[u, var] v, {var, lo, hi}],
       (Message[ibp::mismatch]; Inactive[Integrate][integ, {var, lo, hi}])]];
+ibp[u_] := Function[cur,
+  cur /. Inactive[Integrate][integ_, {var_, lo_, hi_}] :>
+    With[{v = Integrate[integ/u, var]},   (* v = antiderivative of dv = integrand/u *)
+      ((u v) /. var -> hi) - ((u v) /. var -> lo) - Inactive[Integrate][D[u, var] v, {var, lo, hi}]]];
 
 (* §6.5 split the domain at an interior point *)
 splitDomain[c_] := Function[cur,

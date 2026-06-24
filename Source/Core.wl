@@ -193,7 +193,13 @@ stepCore[d : Derivation[a_], f_, noteOpt_] := Module[
   {cur = result[d], asm = assumptionsOf[d], new, rel, ynote, note, cert, rec,
    grading = Lookup[a, "grading", None], order = Lookup[a, "order", None],
    relations = Lookup[a, "relations", {}]},
-  {new, rel, ynote} = normalizeYield[f[cur]];
+  (* a transform may be a plain expr->result function, or WithContext[(expr,ctx)->result]
+     to read Grading/GradingOrder/Relations/Assumptions set once on the derivation. *)
+  {new, rel, ynote} = normalizeYield[
+    If[Head[f] === WithContext,
+      First[f][cur, <|"grading" -> grading, "order" -> order,
+                      "relations" -> relations, "assumptions" -> asm|>],
+      f[cur]]];
   note = If[noteOpt === Automatic, ynote, noteOpt];
   cert = certify[cur, new, rel, asm, grading, order, relations];
   If[cert["status"] === "Refuted", Message[step::refuted, Length[a["steps"]] + 1]];
