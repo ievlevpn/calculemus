@@ -96,41 +96,34 @@ derive[tp[w] ** (A + tp[A]) ** w, Relations -> {A ** w -> 0, tp[w] ** tp[A] -> 0
 (* = 0, verified by sampling A, w that satisfy A w = 0 *)
 ```
 
-## Tour de force — one derivation, five phases
+## Tour de force — one long computation
 
-`examples/10_tour_de_force.wl` assembles the pieces of a high-exceedance
-asymptotic (the setting of arXiv:2401.05527) as a single paper-style derivation
-in tactic mode, **every line verified**:
+`examples/10_tour_de_force.wl` is the classical Mellin derivation
+
+\[
+\int_0^\infty \frac{x^{s-1}}{e^x - 1}\,dx = \Gamma(s)\,\zeta(s),
+\]
+
+as **one quantity carried through nine verified lines** (tactic mode):
 
 ```mathematica
-(* Phase 1 - non-commutative: perturbed inverse covariance *)
-compute[inv[CapSigma - V], Grading -> {V -> 1}, GradingOrder -> 2]
-by[expandInverse[CapSigma, V, 2]]          (* ~ G + G**V**G + G**V**G**V**G *)
-by[let[G, inv[CapSigma]]]                   (* abbreviate G := Sigma^{-1}    *)
-
-(* Phase 2 - an operator term vanishes by optimality *)
-compute[tp[w] ** (A + tp[A]) ** w, Relations -> {A ** w -> 0, tp[w] ** tp[A] -> 0}]
-by[NCExpand]; by[applyRel[]]                (* = 0 *)
-
-(* Phase 3 - the leading Gaussian integral *)
-compute[dint[Exp[-(a/2) x^2 + b x], {x, -Infinity, Infinity}], Assumptions -> a > 0]
-by[on[argOf[Exp], completeSquare[x]]]       (* complete the square in the exponent *)
-by[gaussianIntegral]                        (* Sqrt[2 Pi/a] Exp[b^2/(2a)] *)
-
-(* Phase 4 - bound a sum over a SYMBOLIC number n of components *)
-compute[sum[Log[1 + e/i^2], {i, 1, n}], Assumptions -> e > 0]
-by[on[summand, logBound[e/i^2]]]            (* <= Sum e/i^2 *)
-by[sumLinearity]                            (* = e Sum 1/i^2 *)
-
-(* Phase 5 - exponentiate a log-bound *)
-compute[Log[Q] <= B]
-by[applyBoth[Exp]]                          (* Q <= e^B *)
+compute[dint[x^(s - 1)/(E^x - 1), {x, 0, Infinity}], Assumptions -> s > 1]
+by[rewrite[1/(E^x - 1) -> sum[E^(-k x), {k, 1, Infinity}]]]  (* geometric series *)
+by[fubini]                                                   (* swap sum & integral *)
+by[on[summand, changeVar[u, u/k, {0, Infinity}]]]            (* x = u/k in each term *)
+by[on[summand, PowerExpand]]                                 (* split (u/k)^{s-1}   *)
+by[on[summand, linearity]]                                   (* pull k^{-s} out     *)
+by[on[summand, rewrite[dint[u^(s-1) E^(-u), {u, 0, Infinity}] -> Gamma[s]]]]  (* Γ(s) *)
+by[sumLinearity]                                             (* pull Γ(s) out       *)
+by[rewrite[sum[k^(-s), {k, 1, Infinity}] -> Zeta[s]]]        (* ζ(s)                *)
+(* result: Gamma[s] Zeta[s], verified throughout *)
 ```
 
-It exercises non-commutative algebra, integrals, sums with symbolic dimension,
-inequalities, subexpression addressing, abbreviations, and two-sided relations —
-the kind of multi-page derivation where one unnoticed slip on page 3 would ruin
-everything after it.
+It runs through series, Fubini, a change of variables performed **inside the
+summand**, a power split, pulling a constant out, and recognition of the Gamma
+integral and the zeta sum — with `s` symbolic and the sums infinite, every line
+checked. The kind of multi-page derivation where one unnoticed slip on page 3
+would ruin everything after it.
 
 ---
 

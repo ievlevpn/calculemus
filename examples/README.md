@@ -29,7 +29,7 @@ top-to-bottom and works in plain `.wl` scripts.
 | `07_perturbation_root.wl` | regular perturbation: asymptotic root of `x = 1 + ε x³` (no closed form) | You: the equation + ansatz. CAS: expands, peels off the order equations, solves them; toolkit verifies the residual vanishes to `O(ε²)`. |
 | `08_legendre_generating.wl` | read the Legendre polynomials off `1/√(1−2xt+t²)` | You: "expand to order 3 in t". CAS: the graded expansion of a nested square root; coefficients match `LegendreP[n,x]`. |
 | `09_tactic_mode.wl` | the paper-like `compute` / `by` / `undo` workflow | a few computations built one verified line at a time, including a corrected misstep |
-| `10_tour_de_force.wl` | **one derivation, five phases**, in the spirit of arXiv:2401.05527 | NC Neumann expansion + abbreviation · operator term vanishing by `Aw=0` · Gaussian integral via complete-the-square *inside the exponent* · bound on a sum over a **symbolic** `n` components · two-sided exponentiation — every line verified |
+| `10_tour_de_force.wl` | **one long computation**: `∫₀^∞ xˢ⁻¹/(eˣ−1) dx = Γ(s)ζ(s)` (Mellin) | one quantity, nine verified lines — geometric series · Fubini · change of variables *inside the summand* · power split · pull constant · recognize Γ(s) · recognize ζ(s), with `s` symbolic |
 
 ## The pattern
 
