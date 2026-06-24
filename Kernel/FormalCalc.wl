@@ -30,6 +30,17 @@ certify::usage = "certify[before, after, relation, assumptions] checks whether '
 at::usage      = "at[expr, pos, f] applies f to the subexpression(s) at position pos. at[expr, patt, f] applies f to every subexpression matching pattern patt.";
 rewrite::usage = "rewrite[rule] is the equality transform expr |-> (expr /. rule).";
 
+(* ---- Series & graded asymptotics (Layer 1, §4) ---- *)
+Grading::usage        = "Grading is a derive option: a list {g -> w, ...} (or {g, ...} for weight 1) assigning small generators their weights. Enables verification of ~ steps.";
+GradingOrder::usage   = "GradingOrder is a derive option: the weighted order up to which ~ steps must agree.";
+truncate::usage       = "truncate[expr, grading, order] keeps the monomials of expr whose weighted degree is <= order (expr must be polynomial in the generators). truncate[expr, grading, order, asm] uses assumptions to decide symbolic comparisons.";
+seriesExpand::usage   = "seriesExpand[expr, grading, order] expands expr to weighted order in the graded generators (reciprocals, exp, log, ...), via eps-homogenization. Rational weights + numeric order required for full expansion; otherwise falls back to polynomial truncation.";
+dropHigherOrder::usage = "dropHigherOrder[grading, order] is the transform that expands and drops terms above the weighted order, asserting a ~ (AsymEqual) step. Auto-verified when the derivation carries a matching Grading/GradingOrder.";
+monomialWeight::usage = "monomialWeight[monomial, grading] is the weighted degree of a single monomial.";
+normalizeGrading::usage = "normalizeGrading[g] canonicalizes a grading spec to a list of generator -> weight rules.";
+littleO::usage        = "littleO[scale] marks an omitted term of order o(scale). Idempotent under addition; absorbs nonzero numeric factors.";
+bigO::usage           = "bigO[scale] marks an omitted term of order O(scale). Idempotent under addition; absorbs littleO[scale] and nonzero numeric factors.";
+
 (* ---- Bounds (Layer 1, §9) ---- *)
 signOf::usage   = "signOf[expr] or signOf[expr, assumptions] returns Positive, Negative, NonNegative, NonPositive, or Unknown.";
 dropTerm::usage = "dropTerm[term] is the transform that drops a nonnegative term, asserting a GreaterEqual step (current >= current - term).";
@@ -40,6 +51,7 @@ Begin["`Private`"];
 
 $dir = DirectoryName[$InputFileName];
 Get[FileNameJoin[{$dir, "..", "Source", "Core.wl"}]];
+Get[FileNameJoin[{$dir, "..", "Source", "Series.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Bounds.wl"}]];
 
 End[];
