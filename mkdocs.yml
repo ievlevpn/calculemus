@@ -79,5 +79,6 @@ nav:
       - Sums: reference/sums.md
       - Bounds: reference/bounds.md
       - Inequalities: reference/inequalities.md
+      - Two-sided (in)equations: reference/twosided.md
       - Gaussian pack (domain): reference/gaussian.md
   - Examples: examples.md
