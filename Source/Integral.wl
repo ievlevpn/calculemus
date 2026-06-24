@@ -52,6 +52,14 @@ splitDomain[c_] := Function[cur,
   cur /. Inactive[Integrate][f_, {var_, lo_, hi_}] :>
     Inactive[Integrate][f, {var, lo, c}] + Inactive[Integrate][f, {var, c, hi}]];
 
+(* §6.8 Gaussian integral normalization (a general definite-integral identity):
+     Int_{-inf}^{inf} exp(k x^2 + m x + c0) dx = sqrt(-pi/k) exp(c0 - m^2/(4k)),  k < 0. *)
+gaussianIntegral := Function[cur,
+  cur /. Inactive[Integrate][Exp[q_], {x_, -Infinity, Infinity}] /;
+      (PolynomialQ[q, x] && Coefficient[q, x, 2] =!= 0) :>
+    With[{k = Coefficient[q, x, 2], m = Coefficient[q, x, 1], c0 = Coefficient[q, x, 0]},
+      Sqrt[-Pi/k] Exp[c0 - m^2/(4 k)]]];
+
 (* §6.6 swap sum and integral (both directions; bridges to Sums) *)
 swapSumIntegral := Function[cur, cur /. {
   Inactive[Integrate][Inactive[Sum][f_, idx_], dom_] :> Inactive[Sum][Inactive[Integrate][f, dom], idx],

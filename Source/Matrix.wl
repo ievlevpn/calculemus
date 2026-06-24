@@ -35,6 +35,11 @@ randSPD[dim_] := With[{R = RandomReal[{-1, 1}, {dim, dim}]}, R . Transpose[R] + 
 symPart[a_]  := (a + tp[a])/2;
 antiPart[a_] := (a - tp[a])/2;
 
+(* §3.4 symmetric quadratic form and its completed square (A symmetric):
+     x^T A x + x^T c + c^T x  =  (x + A^{-1} c)^T A (x + A^{-1} c) - c^T A^{-1} c. *)
+quadForm[A_, c_, x_]         := tp[x] ** A ** x + tp[x] ** c + tp[c] ** x;
+completeSquareMat[A_, c_, x_] := With[{y = x + inv[A] ** c}, tp[y] ** A ** y - tp[c] ** inv[A] ** c];
+
 (* §3.4 apply linear side relations (NC-aware, handles **-subproducts) *)
 applyRel[rules_List] := Function[cur, NCReplaceAll[cur, rules]];
 (* context-aware: read Relations from the derivation (set once) *)

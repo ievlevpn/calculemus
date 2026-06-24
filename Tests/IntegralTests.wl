@@ -52,4 +52,10 @@ dSwap = derive[Inactive[Integrate][Inactive[Sum][g[k] x^k, {k, 0, 2}], {x, 0, 1}
         step[swapSumIntegral];
 assert[! FreeQ[result[dSwap], Inactive[Sum][Inactive[Integrate][__], _]], "sum pulled outside integral"];
 
+(* ---- Gaussian integral normalization (general definite-integral identity) ---- *)
+dGI = derive[Inactive[Integrate][Exp[-a x^2 + m x], {x, -Infinity, Infinity}],
+             Assumptions -> a > 0] // step[gaussianIntegral];
+assert[FreeQ[result[dGI], Inactive], "gaussian integral -> closed form"];
+assert[verifiedQ[dGI], "gaussian integral verified"];
+
 Print["ALL TESTS PASSED (", $passed, " assertions)"];

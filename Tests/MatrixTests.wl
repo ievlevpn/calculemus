@@ -70,6 +70,17 @@ dPrefBad = Quiet@step[
    Function[cur, tp[w] ** w]];
 assert[stepsOf[dPrefBad][[1]]["cert"]["status"] === "Refuted", "prefBad refuted"];
 
+(* ---- symmetric quadratic-form complete-the-square (A symmetric) ---- *)
+ncDeclareSym[capA]; ncDeclareVec[cc, xx];
+dMCS = derive[quadForm[capA, cc, xx]] // step[completeSquareMat[capA, cc, xx] &];
+assert[verifiedQ[dMCS], "completeSquareMat verified (symmetric A)"];
+
+(* ---- symmetry is load-bearing: a generic (non-symmetric) A completion is refused ---- *)
+ncDeclare[genA];
+dMCSbad = Quiet@step[derive[quadForm[genA, cc, xx]],
+   Function[cur, completeSquareMat[genA, cc, xx]]];
+assert[stepsOf[dMCSbad][[1]]["cert"]["status"] === "Refuted", "non-symmetric completion refused"];
+
 (* ---- scalar work is NOT misrouted to the NC path (no declared NC symbols) ---- *)
 dScalar = derive[(p + q)^2] // step[rewrite[(p + q)^2 -> p^2 + 2 p q + q^2]];
 assert[verifiedQ[dScalar], "scalar not misrouted"];

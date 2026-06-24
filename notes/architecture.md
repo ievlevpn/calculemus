@@ -21,6 +21,7 @@ the structural plan; the wishlist is the feature backlog.
    - Mechanism: a transform is `expr -> result`, or `WithContext[(expr, ctx) -> result]` to read `Grading`/`GradingOrder`/`Relations`/`Assumptions` from the derivation.
 5. **Lean on Mathematica; wrap only what's awkward.** Native `Expand`/`Factor`/`Simplify`/`Series`/`Reduce` are used directly. We build only the 🔴/🟡 items from the wishlist — graded truncation, the relation-chain, sign-direction bookkeeping, `Inactive`-rewrite packaging — never reinvent the 🟢 ones.
 6. **Immutable & functional.** A `Derivation` is an inert value. `step` returns a *new* derivation. No hidden mutable state → replayable, branchable, diffable.
+7. **General core vs domain packs.** The `FormalCalc` core is general-purpose mathematics only — algebra, series, sums, integrals, non-commutative/matrix, bounds, verification. Anything *overly specific to one field* (probabilistic objects like Gaussian log-densities; named theorems like Slepian / Borell-TIS / Piterbarg) lives in a **separate context** (e.g. `FormalCalc`Gaussian``) that the core does **not** load — you `Get` it explicitly on top. Litmus test: if a symbol encodes a domain *object or theorem* it's a pack; if it's a pure math *operation* (complete-the-square, the Gaussian integral, a quadratic form) it stays general. Domain packs only *provide* constructors/transforms; verification stays in the core (transforms route through `certify` automatically), so packs need no privileged access.
 
 ---
 
@@ -106,10 +107,14 @@ roadmap, not empty stubs.
 | 1 | `Source/Matrix.wl` | §3 noncommutative / matrix + §4.6 graded Neumann inverse (NCAlgebra backend) | **built** (random-matrix verification) |
 | 1 | `Source/Sums.wl` | §5 reindex / split / Fubini / linearity | **built** (Activate + numeric verification) |
 | 1 | `Source/Integral.wl` | §6 Inactive linearity / change-of-var / IBP / split / Fubini | **built** (numeric-quadrature verification) |
-| 1 | `Source/Expr.wl` | §1 generic surgery, §2 commutative (mostly native wrappers) | planned |
+| 1 | `Source/Expr.wl` | §1 generic surgery, §2 commutative (scalar `completeSquare`; native wrappers) | **built** |
 | 1 | `Source/Equation.wl` | two-sided (in)equation manipulation (§9.2 "both sides") | planned |
 | 2 | `Source/Core.wl` | `derive` / `step` / accessors / rendering | **built** |
-| domain | `Source/Gaussian.wl` | §8 log-density exponent, complete-the-square (scalar + matrix), Gaussian integral | **built** (symmetric/SPD verification) |
+| **domain** | `Source/Domain/Gaussian.wl` | §8 probability-specific only: `gaussExp` (log-density), `prefactorExponent`; future Slepian/Borell-TIS/Piterbarg | **built** — **separate context `FormalCalc`Gaussian``, NOT loaded by the core** |
+
+The general math formerly in the Gaussian file now lives in the general core: scalar
+`completeSquare` → `Expr.wl`; `quadForm`/`completeSquareMat` (symmetric quadratic-form
+completion) → `Matrix.wl`; `gaussianIntegral` (a calculus identity) → `Integral.wl`.
 | — | `Kernel/FormalCalc.wl` | master loader + public usages | **built** |
 | — | `Tests/*.wl` | assert-based self-checks per module | **built (core)** |
 

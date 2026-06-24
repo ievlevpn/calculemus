@@ -38,6 +38,9 @@ certify::usage = "certify[before, after, relation, assumptions] checks whether '
 at::usage      = "at[expr, pos, f] applies f to the subexpression(s) at position pos. at[expr, patt, f] applies f to every subexpression matching pattern patt.";
 rewrite::usage = "rewrite[rule] is the equality transform expr |-> (expr /. rule).";
 
+(* ---- General expression algebra (Layer 1, §1-§2) ---- *)
+completeSquare::usage = "completeSquare[x] is the scalar transform completing a x^2 + b x + c into a (x + b/(2a))^2 + (c - b^2/(4a)).";
+
 (* ---- Series & graded asymptotics (Layer 1, §4) ---- *)
 Grading::usage        = "Grading is a derive option: a list {g -> w, ...} (or {g, ...} for weight 1) assigning small generators their weights. Enables verification of ~ steps.";
 GradingOrder::usage   = "GradingOrder is a derive option: the weighted order up to which ~ steps must agree.";
@@ -57,6 +60,8 @@ expandInverse::usage  = "expandInverse[s, e, n] is the transform replacing inv[s
 ncDeclareSym::usage   = "ncDeclareSym[A, ...] marks symbols as symmetric matrices, sampled as symmetric positive-definite in verification (e.g. covariances).";
 symPart::usage        = "symPart[a] = (a + tp[a])/2, the symmetric part.";
 antiPart::usage       = "antiPart[a] = (a - tp[a])/2, the antisymmetric part.";
+quadForm::usage          = "quadForm[A, c, x] = tp[x]**A**x + tp[x]**c + tp[c]**x, a symmetric quadratic form with linear term.";
+completeSquareMat::usage = "completeSquareMat[A, c, x] = (x + A^-1 c)^T A (x + A^-1 c) - c^T A^-1 c, the completed square of quadForm[A,c,x] for symmetric A.";
 applyRel::usage       = "applyRel[rules] is the transform that applies NC side-relations (e.g. {A ** w -> 0}) via NCReplaceAll. Verified by random matrices/vectors that satisfy the derivation's Relations.";
 Relations::usage      = "Relations is a derive option: a list of NC side relations of the form {mat ** vec -> 0, ...}. Verification samples random matrices/vectors satisfying them.";
 
@@ -68,6 +73,7 @@ changeVar::usage = "changeVar[u, phi, {ua, ub}] is the transform substituting th
 ibp::usage       = "ibp[u, v] is the integration-by-parts transform: the integrand must equal u * D[v, x]; yields the boundary term u v | minus the held remainder integral of D[u,x] v.";
 splitDomain::usage = "splitDomain[c] splits a held definite integral at the interior point c.";
 swapSumIntegral::usage = "swapSumIntegral interchanges a held Inactive[Sum] and Inactive[Integrate] (either order).";
+gaussianIntegral::usage = "gaussianIntegral is the transform normalizing Int_{-inf}^{inf} Exp[quadratic in x] dx to its closed form (a general definite-integral identity).";
 
 (* ---- Formal sums (Layer 1, §5) ---- *)
 sum::usage          = "sum[f, {k, a, b}] is the held sum Inactive[Sum][f, {k, a, b}].";
@@ -75,14 +81,6 @@ sumLinearity::usage = "sumLinearity is the transform that splits held sums over 
 shiftIndex::usage   = "shiftIndex[c] reindexes a held sum k -> k-c, shifting the bounds by c.";
 splitSum::usage     = "splitSum[m] splits a held sum's range at the interior point m.";
 swapSum::usage      = "swapSum interchanges the order of two nested held sums (Fubini), assuming independent bounds.";
-
-(* ---- Gaussian domain pack (§8) ---- *)
-gaussExp::usage            = "gaussExp[x, s] = -1/2 tp[x] ** inv[s] ** x, the centered Gaussian log-density exponent.";
-prefactorExponent::usage   = "prefactorExponent[x1, s1, x2, s2] = gaussExp[x1,s1] - gaussExp[x2,s2], the exponent of a Gaussian log-density ratio.";
-completeSquare::usage      = "completeSquare[x] is the scalar transform completing a x^2 + b x + c into a (x + b/(2a))^2 + (c - b^2/(4a)).";
-gaussQuadForm::usage       = "gaussQuadForm[A, c, x] = tp[x]**A**x + tp[x]**c + tp[c]**x.";
-gaussCompleteSquare::usage = "gaussCompleteSquare[A, c, x] = (x + A^-1 c)^T A (x + A^-1 c) - c^T A^-1 c, the completed square of gaussQuadForm for symmetric A.";
-gaussianIntegral::usage    = "gaussianIntegral is the transform normalizing Int_{-inf}^{inf} Exp[quadratic in x] dx to its closed form.";
 
 (* ---- Bounds (Layer 1, §9) ---- *)
 signOf::usage   = "signOf[expr] or signOf[expr, assumptions] returns Positive, Negative, NonNegative, NonPositive, or Unknown.";
@@ -94,11 +92,11 @@ Begin["`Private`"];
 
 $dir = DirectoryName[$InputFileName];
 Get[FileNameJoin[{$dir, "..", "Source", "Core.wl"}]];
+Get[FileNameJoin[{$dir, "..", "Source", "Expr.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Series.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Matrix.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Integral.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Sums.wl"}]];
-Get[FileNameJoin[{$dir, "..", "Source", "Gaussian.wl"}]];
 Get[FileNameJoin[{$dir, "..", "Source", "Bounds.wl"}]];
 
 End[];
