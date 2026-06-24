@@ -1,5 +1,12 @@
 # Calculemus
 
+> ⚠️ **Disclaimer.** This is a **personal research project**, pre-1.0,
+> experimental, and provided **as-is** with no warranty. It grew out of an old
+> personal collection of Mathematica scripts and is **not a proof assistant** —
+> verification is symbolic plus numeric spot-probes, which catches mistakes in
+> practice but is **not a formal guarantee**. APIs and notation **will change
+> without notice**. Check anything that matters.
+
 **Verifiable, step-by-step formal manipulation in Mathematica.**
 
 > *"...when there are disputes among persons, we can simply say:
@@ -52,17 +59,11 @@ Start with **[Getting started](docs/getting-started.md)**, then browse the
 
 ## Status
 
-This is a **personal research project**, written by one person for their own
+A **personal research project**, written by one person for their own
 mathematical-physics work (the recurring moves of large asymptotic computations).
-It grew out of an old personal collection of Mathematica scripts I'd accumulated
-for the same purpose, gradually consolidated into a coherent toolkit.
-It is **pre-1.0, experimental, and provided as-is**:
-
-- APIs, names, and notation **will change without notice**.
-- It is **not a substitute for a proof assistant** — verification is symbolic
-  plus numeric spot-probes, which catches mistakes in practice but is **not a
-  formal guarantee of correctness**. Check anything that matters.
-- No support, no stability promises, no warranty. Use at your own risk.
+It grew out of an old personal collection of Mathematica scripts accumulated for
+the same purpose, gradually consolidated into a coherent toolkit. See the
+disclaimer at the top — no support, no stability promises, use at your own risk.
 
 ## See also
 
