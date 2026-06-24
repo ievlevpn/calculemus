@@ -106,12 +106,6 @@ inactiveParams[e_] := Complement[
 
 (* one numeric value at a sample point: Activate (symbolic eval, e.g. Gamma/Zeta)
    then N; failing that, map to NSum/NIntegrate. *)
-inactiveValue[expr_, sub_] := Module[{v},
-  v = Quiet@TimeConstrained[N[Activate[expr] /. sub], 4, $bad];
-  If[NumericQ[v], v,
-    Quiet@TimeConstrained[
-      N[(expr /. sub) /. {Inactive[Sum] -> NSum, Inactive[Integrate] -> NIntegrate}], 6, $bad]]];
-
 inactiveSamples[before_, after_, asm_, m_] := Module[{bsyms, vparams, draw, pts},
   bsyms = inactiveBoundSyms[{before, after}];
   vparams = Complement[Union[inactiveParams[before], inactiveParams[after]], bsyms];
@@ -119,21 +113,31 @@ inactiveSamples[before_, after_, asm_, m_] := Module[{bsyms, vparams, draw, pts}
   pts = Select[Table[draw, {4 m}], (asm === True || TrueQ[asm /. #]) &];
   If[pts === {}, Table[draw, {m}], Take[pts, UpTo[m]]]];
 
-inactiveProbe[before_, after_, rel_, asm_] := Module[{res, tol = 10.^-4},
-  res = Table[
-    Module[{bn = inactiveValue[before, pt], an = inactiveValue[after, pt]},
-      If[bn === $bad || an === $bad || ! NumericQ[bn] || ! NumericQ[an], Indeterminate,
-         numericRelHolds[rel, bn, an, tol]]],
-    {pt, inactiveSamples[before, after, asm, 8]}];
-  res = DeleteCases[res, Indeterminate];
-  Which[res === {}, Unknown, MemberQ[res, False], False, True, True]];
+(* numeric value of an ALREADY-activated form at a sample (cheap); only if that
+   fails to numericize do we fall back to NSum/NIntegrate on the original. *)
+inactiveSampleValue[activated_, orig_, pt_] := Module[{v},
+  v = If[activated === $bad, $bad, Quiet@TimeConstrained[N[activated /. pt], 3, $bad]];
+  If[NumericQ[v], v,
+    Quiet@TimeConstrained[
+      N[(orig /. pt) /. {Inactive[Sum] -> NSum, Inactive[Integrate] -> NIntegrate}], 5, $bad]]];
 
-inactiveCertify[before_, after_, rel_, asm_] := Module[{sz, pr, status},
-  sz = rel === Equal && TrueQ@Quiet@TimeConstrained[
-    Simplify[Activate[before] - Activate[after], asm] === 0, 6, False];
-  pr = inactiveProbe[before, after, rel, asm];
-  status = Which[pr === False, "Refuted", sz, "Verified", pr === True, "NumericOnly", True, "Unverified"];
-  <|"relation" -> rel, "symbolic" -> If[sz, True, Unknown],
-    "numeric" -> <|"verdict" -> pr|>, "status" -> status|>];
+(* Activate each side ONCE (e.g. to Gamma/Zeta); reuse it for the symbolic equality
+   check and for cheap per-sample numeric substitution. If the symbolic check
+   already proves it, skip the numeric probe entirely. *)
+inactiveCertify[before_, after_, rel_, asm_] := Module[{aB, aA, sz, res, pr, tol = 10.^-4},
+  aB = Quiet@TimeConstrained[Activate[before], 5, $bad];
+  aA = Quiet@TimeConstrained[Activate[after], 5, $bad];
+  sz = rel === Equal && aB =!= $bad && aA =!= $bad &&
+       TrueQ@Quiet@TimeConstrained[Simplify[aB - aA, asm] === 0, 3, False];
+  If[sz,
+    <|"relation" -> rel, "symbolic" -> True, "numeric" -> <|"verdict" -> Unknown|>, "status" -> "Verified"|>,
+    res = DeleteCases[
+      Table[Module[{bn = inactiveSampleValue[aB, before, pt], an = inactiveSampleValue[aA, after, pt]},
+          If[NumericQ[bn] && NumericQ[an], numericRelHolds[rel, bn, an, tol], Indeterminate]],
+        {pt, inactiveSamples[before, after, asm, 5]}],
+      Indeterminate];
+    pr = Which[res === {}, Unknown, MemberQ[res, False], False, True, True];
+    <|"relation" -> rel, "symbolic" -> Unknown, "numeric" -> <|"verdict" -> pr|>,
+      "status" -> Which[pr === False, "Refuted", pr === True, "NumericOnly", True, "Unverified"]|>]];
 
 intCertify[before_, after_, rel_, asm_] := inactiveCertify[before, after, rel, asm];
