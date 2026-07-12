@@ -48,17 +48,27 @@ changeVar[newvar_, phi_] := Function[cur,
 
 (* §6.3 integration by parts. ibp[u, v]: integrand must be u * D[v]; emits the
    boundary term u v | minus the remainder. ibp[u]: the antiderivative v of the
-   rest (integrand / D... ) is COMPUTED for you. *)
+   rest (integrand / D... ) is COMPUTED for you. Boundary terms at infinite
+   endpoints are taken as limits under the derivation's assumptions (a plain
+   substitution would leave junk like 0*E^(-Infinity u)). *)
+ibpBoundary[uv_, var_, pt_, asm_] := If[MatchQ[pt, _DirectedInfinity],
+  Quiet@Limit[uv, var -> pt, Assumptions -> asm],
+  (uv /. var -> pt)];
+
+ibpParts[u_, v_, {var_, lo_, hi_}, asm_] :=
+  ibpBoundary[u v, var, hi, asm] - ibpBoundary[u v, var, lo, asm] -
+    Inactive[Integrate][D[u, var] v, {var, lo, hi}];
+
 ibp::mismatch = "Integrand does not equal u * D[v, x]; IBP not applied.";
-ibp[u_, v_] := Function[cur,
+ibp[u_, v_] := WithContext[Function[{cur, ctx},
   cur /. Inactive[Integrate][integ_, {var_, lo_, hi_}] :>
     If[Simplify[integ - u D[v, var]] === 0,
-      ((u v) /. var -> hi) - ((u v) /. var -> lo) - Inactive[Integrate][D[u, var] v, {var, lo, hi}],
-      (Message[ibp::mismatch]; Inactive[Integrate][integ, {var, lo, hi}])]];
-ibp[u_] := Function[cur,
+      ibpParts[u, v, {var, lo, hi}, ctx["assumptions"]],
+      (Message[ibp::mismatch]; Inactive[Integrate][integ, {var, lo, hi}])]]];
+ibp[u_] := WithContext[Function[{cur, ctx},
   cur /. Inactive[Integrate][integ_, {var_, lo_, hi_}] :>
     With[{v = Integrate[integ/u, var]},   (* v = antiderivative of dv = integrand/u *)
-      ((u v) /. var -> hi) - ((u v) /. var -> lo) - Inactive[Integrate][D[u, var] v, {var, lo, hi}]]];
+      ibpParts[u, v, {var, lo, hi}, ctx["assumptions"]]]]];
 
 (* §6.5 split the domain at an interior point *)
 splitDomain[c_] := Function[cur,
@@ -133,11 +143,16 @@ inactiveCertify[before_, after_, rel_, asm_] := Module[{aB, aA, sz, res, pr, tol
     <|"relation" -> rel, "symbolic" -> True, "numeric" -> <|"verdict" -> Unknown|>, "status" -> "Verified"|>,
     res = DeleteCases[
       Table[Module[{bn = inactiveSampleValue[aB, before, pt], an = inactiveSampleValue[aA, after, pt]},
-          If[NumericQ[bn] && NumericQ[an], numericRelHolds[rel, bn, an, tol], Indeterminate]],
+          If[NumericQ[bn] && NumericQ[an], {pt, numericRelHolds[rel, bn, an, tol], bn, an}, {pt, Indeterminate}]],
         {pt, inactiveSamples[before, after, asm, 5]}],
-      Indeterminate];
-    pr = Which[res === {}, Unknown, MemberQ[res, False], False, True, True];
-    <|"relation" -> rel, "symbolic" -> Unknown, "numeric" -> <|"verdict" -> pr|>,
+      {_, Indeterminate, ___}];
+    pr = Which[res === {}, Unknown, MemberQ[res[[All, 2]], False], False, True, True];
+    <|"relation" -> rel, "symbolic" -> Unknown,
+      "numeric" -> <|"verdict" -> pr,
+        If[pr === False,
+          "witness" -> FirstCase[res, {pt_, False, bn_, an_} :>
+            <|"point" -> pt, "before" -> bn, "after" -> an|>],
+          Nothing]|>,
       "status" -> Which[pr === False, "Refuted", pr === True, "NumericOnly", True, "Unverified"]|>]];
 
 intCertify[before_, after_, rel_, asm_] := inactiveCertify[before, after, rel, asm];

@@ -65,8 +65,8 @@ test["relation =", relationOf[d1] === Equal];
 test["verified", verifiedQ[d1]];
 test["one step recorded", Length[stepsOf[d1]] === 1];
 test["note default empty", stepsOf[d1][[1]]["note"] === ""];
-d1n = derive[a] // step[rewrite[a -> a], "identity"];
-test["note recorded", stepsOf[d1n][[1]]["note"] === "identity"];
+d1n = derive[a (a + 2 b)] // step[rewrite[a (a + 2 b) -> a^2 + 2 a b], "expand"];
+test["note recorded", stepsOf[d1n][[1]]["note"] === "expand"];
 
 (* ============================================================ *)
 section["step: refutation is recorded, not thrown"];
@@ -109,5 +109,17 @@ test["at by single position", at[a + b + c, {2}, f] === a + f[b] + c];
 test["at by many positions", at[a + b + c, {{1}, {3}}, f] === f[a] + b + f[c]];
 test["at by pattern", same[at[x^2 + y^2, _Symbol^2, g], g[x^2] + g[y^2]] ||
    at[x^2 + y^2, _Symbol^2, g] === g[x^2] + g[y^2]];
+
+(* ============================================================ *)
+section["signed probes & no-op honesty"];
+test["Sqrt[x^2] == x is Refuted without assumptions",
+  Quiet[certify[Sqrt[x^2], x, Equal, True]]["status"] === "Refuted"];
+test["Sqrt[x^2] == x is Verified under x >= 0",
+  certify[Sqrt[x^2], x, Equal, x >= 0]["status"] === "Verified"];
+test["refuted numeric verdict carries a counterexample witness",
+  AssociationQ[Quiet[certify[Abs[y], y, Equal, True]]["numeric"]["witness"]]];
+dNoop = Quiet@step[derive[(nx + ny)^2], rewrite[(nx + nq)^3 -> 0]];
+test["no-op transform records no step", stepsOf[dNoop] === {}];
+test["no-op leaves the expression as the start", result[dNoop] === (nx + ny)^2];
 
 endSuite[];

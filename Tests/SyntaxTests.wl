@@ -88,4 +88,32 @@ compute[(a + b)^2];
 by[rewrite[(a + b)^2 -> a^2 + 2 a b + b^2]];
 test["no caveats when fully verified", Head[caveats[]] === Style];
 
+(* ============================================================ *)
+section["search loop: refusal, assuming, natural input, discovery"];
+compute[sa + sb, Assumptions -> {sa > 0, sb > 0}];
+Quiet@by[atMost[sa]];                       (* illegal: sa+sb <= sa *)
+test["refuted move is refused: no step recorded", stepsOf[goal[]] === {}];
+test["refuted move is refused: goal unchanged", result[goal[]] === sa + sb];
+by[atLeast[sa]];
+test["legal move still advances", Length[stepsOf[goal[]]] === 1 && verifiedQ[goal[]]];
+
+compute[Sqrt[sx^2]];
+Quiet@by[rewrite[Sqrt[sx^2] -> sx]];        (* refused: needs sx >= 0 *)
+test["sign-dependent rewrite refused without assumption", stepsOf[goal[]] === {}];
+by[assuming[sx >= 0]];
+by[rewrite[Sqrt[sx^2] -> sx]];
+test["assuming[] makes it verify", verifiedQ[goal[]] && result[goal[]] === sx];
+test["assuming[] accumulates the assumption", assumptionsOf[goal[]] === (sx >= 0)];
+
+compute[Integrate[E^(-sq t), {t, 0, Infinity}], Assumptions -> sq > 1];
+test["live Integrate input is held, not evaluated",
+  MatchQ[result[goal[]], Inactive[Integrate][__]] && Head[goal[]] === Derivation];
+
+compute[(sa + sb)^2];
+Quiet@by[rewrite[(sa + sq)^7 -> 0]];
+test["no-op by[] records nothing", stepsOf[goal[]] === {}];
+test["moves[] returns a grid", Head[moves[]] === Grid];
+by[rewrite[(sa + sb)^2 -> sa^2 + 2 sa sb + sb^2]];
+test["changed[] highlights the difference", ! FreeQ[changed[], Framed]];
+
 endSuite[];

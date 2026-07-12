@@ -15,6 +15,7 @@ setSyntax[step, {_, _., _.}];
 setSyntax[stepBoth, {_, _., _.}];
 setSyntax[by, {_, _.}];
 setSyntax[undo, {}];  setSyntax[goal, {}];  setSyntax[caveats, {_.}];
+setSyntax[assuming, {_}];  setSyntax[moves, {___}];  setSyntax[changed, {___}];
 
 (* --- inspecting / addressing subexpressions --- *)
 setSyntax[result, {_}];  setSyntax[relationOf, {_}];  setSyntax[verifiedQ, {_}];

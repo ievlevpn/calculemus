@@ -90,7 +90,7 @@ dint::usage      = "dint[f, {x, a, b}] is the held definite integral Inactive[In
 iint::usage      = "iint[f, x] is the held indefinite integral Inactive[Integrate][f, x].";
 linearity::usage = "linearity is the transform that splits held integrals over sums and pulls out factors free of the integration variable.";
 changeVar::usage = "changeVar[u, phi, {ua, ub}] is the transform substituting the (single) integration variable x = phi (in u), inserting the Jacobian D[phi, u] and new limits {ua, ub}.";
-ibp::usage       = "ibp[u, v] is the integration-by-parts transform: the integrand must equal u * D[v, x]; yields the boundary term u v | minus the held remainder integral of D[u,x] v.";
+ibp::usage       = "ibp[u, v] is the integration-by-parts transform: the integrand must equal u * D[v, x]; yields the boundary term u v | minus the held remainder integral of D[u,x] v. Boundary terms at infinite endpoints are taken as limits under the derivation's assumptions.";
 splitDomain::usage = "splitDomain[c] splits a held definite integral at the interior point c.";
 swapSumIntegral::usage = "swapSumIntegral interchanges a held Inactive[Sum] and Inactive[Integrate] (either order).";
 gaussianIntegral::usage = "gaussianIntegral is the transform normalizing Int_{-inf}^{inf} Exp[quadratic in x] dx to its closed form (a general definite-integral identity).";
@@ -134,15 +134,18 @@ lhsOf::usage       = "lhsOf[obj] / rhsOf[obj] return the current left/right side
 rhsOf::usage       = "rhsOf[obj] returns the current right side of a two-sided relation.";
 
 (* ---- Natural surface syntax (tactic mode + verbs) ---- *)
-compute::usage = "compute[expr] starts an interactive derivation (a 'page'); compute[L <= M] (any relation) starts a two-sided one. Continue with by[...], step back with undo[], inspect with goal[].";
-by::usage      = "by[op] adds a verified line to the current computation by applying op (e.g. by[ibp[x]], by[amgm[a,b]], by[fubini]); by[op, \"note\"] adds a margin note.";
+compute::usage = "compute[expr] starts an interactive derivation (a 'page'); compute[L <= M] (any relation) starts a two-sided one. Live Integrate/Sum/Product in expr are automatically held (inertized). Continue with by[...], step back with undo[], inspect with goal[].";
+by::usage      = "by[op] adds a verified line to the current computation by applying op (e.g. by[ibp[x]], by[amgm[a,b]], by[fubini]); by[op, \"note\"] adds a margin note. A move whose claimed relation is REFUTED is refused: the goal stays unchanged and the refused line is returned for inspection.";
 undo::usage    = "undo[] steps the current computation back one line.";
 goal::usage    = "goal[] is the current state of the interactive computation.";
+assuming::usage = "assuming[cond] adds the assumption cond to the derivation from this step on (for when a search realizes mid-derivation that it needs, e.g., x >= 0). Contradictory additions are rejected.";
+moves::usage   = "moves[] lists the transforms applicable to the current goal's shape (moves[d] for a given derivation) \[Dash] what can I do from here?";
+changed::usage = "changed[] displays the current line with the subexpressions that differ from the previous line highlighted \[Dash] what did that step actually do?";
 atMost::usage  = "atMost[x] asserts the current quantity is <= x (verified). atLeast[x] asserts >= x.";
 atLeast::usage = "atLeast[x] asserts the current quantity is >= x (verified).";
 drop::usage    = "drop[t] drops the nonnegative term t (a >= step). Alias of dropTerm.";
 let::usage     = "let[w, expr] names a subexpression: w := expr. Alias of abbreviate.";
-evaluate::usage = "evaluate activates held integrals/sums to evaluate them. Alias of Activate.";
+evaluate::usage = "evaluate activates held integrals/sums to evaluate them, under the derivation's assumptions; conditions the assumptions already imply are stripped from the result.";
 fubini::usage  = "fubini interchanges the order of a sum and an integral (or two nested sums).";
 amgm::usage    = "amgm[a, b] applies the AM-GM inequality Sqrt[a b] <= (a+b)/2.";
 triangleIneq::usage = "triangleIneq[a, b] applies the triangle inequality |a+b| <= |a|+|b|.";

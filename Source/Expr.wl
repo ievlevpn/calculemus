@@ -10,7 +10,11 @@ abbreviate[w_, expr_] := Function[cur,
   (* a name for a non-commutative expression must itself be non-commutative,
      or substituting it would silently collapse the operator structure. *)
   If[TrueQ@ncExprQ[expr], Quiet@SetNonCommutative[w]];
-  Yields[cur /. expr -> w, Equal,
+  (* two passes: Replace at all levels catches complete occurrences (which
+     plain /. misses after a partial flat match, e.g. the (p+q)^2 inside
+     (p+q)^2 + (p+q)); the final /. catches partial flat matches inside a
+     longer Plus/Times, which Replace does not do *)
+  Yields[Replace[cur, expr -> w, {0, Infinity}] /. expr -> w, Equal,
     "let " <> ToString[w] <> " := " <> ToString[expr, InputForm], <|"define" -> (w -> expr)|>]];
 
 (* restore[w]: replace w by its recorded definition.  restoreAll: expand every abbreviation. *)

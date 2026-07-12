@@ -67,47 +67,57 @@ trivialAsmQ[asm_] := asm === True || asm === {} || asm === None;
 
 samplePoints[{}, asm_, n_] := {{}};
 samplePoints[vars_, asm_, n_] := Module[{seed, pts},
-  seed = If[trivialAsmQ[asm],
-    Thread[vars -> RandomReal[{0.2, 3.0}, Length[vars]]],
-    Quiet@Check[
-      Module[{fi = FindInstance[asm, vars, Reals]},
-        If[Head[fi] =!= List || fi === {}, $Failed,
-           Thread[vars -> (vars /. First[fi])]]],
-      $Failed]
-  ];
+  (* unconstrained variables are sampled with BOTH signs (plus one all-positive
+     point for expressions only defined there), so a sign-dependent claim like
+     Sqrt[x^2] == x cannot pass on a positive-only probe *)
+  If[trivialAsmQ[asm],
+    Return[Prepend[
+      Table[Thread[vars -> RandomChoice[{-1, 1}, Length[vars]] RandomReal[{0.2, 3.0}, Length[vars]]], {n}],
+      Thread[vars -> RandomReal[{0.2, 3.0}, Length[vars]]]]]];
+  seed = Quiet@Check[
+    Module[{fi = FindInstance[asm, vars, Reals]},
+      If[Head[fi] =!= List || fi === {}, $Failed,
+         Thread[vars -> (vars /. First[fi])]]],
+    $Failed];
   If[seed === $Failed, Return[$Failed]];
   pts = Table[
     Thread[vars -> ((vars /. seed) RandomReal[{0.6, 1.6}, Length[vars]]
                     + RandomReal[{-0.05, 0.05}, Length[vars]])],
     {n}];
-  pts = Select[pts, (trivialAsmQ[asm] || TrueQ[asm /. #]) &];
+  pts = Select[pts, TrueQ[asm /. #] &];
   If[pts === {}, {seed}, pts]
 ];
 
-numericRelHolds[rel_, b_, a_, tol_] := Module[{bn = N[b], an = N[a], scale},
+numericRelHolds[rel_, b_, a_, tol_] := Module[{bn = N[b], an = N[a], scale, r},
   If[! (NumericQ[bn] && NumericQ[an]), Return[Indeterminate]];
   scale = tol (1 + Abs[bn]);
-  Switch[rel,
+  r = Switch[rel,
     Equal,        Abs[an - bn] <= scale,
     LessEqual,    bn - an <= scale,
     Less,         bn - an <= scale,
     GreaterEqual, an - bn <= scale,
     Greater,      an - bn <= scale,
-    _,            Indeterminate]
+    _,            Indeterminate];
+  (* complex probe values leave order comparisons unevaluated: no data, not a pass *)
+  If[r === True || r === False, r, Indeterminate]
 ];
 
 numericVerdict[before_, after_, AsymEqual, asm_] := <|"verdict" -> Unknown, "trials" -> 0, "passed" -> 0|>;
 numericVerdict[before_, after_, rel_, asm_] := Module[
-  {vars, pts, res, tol = 10.^-8},
+  {vars, pts, evals, res, bad, tol = 10.^-8},
   vars = freeSymbols[{before, after, asm}];
   pts = samplePoints[vars, asm, 12];
   If[pts === $Failed, Return[<|"verdict" -> Unknown, "trials" -> 0, "passed" -> 0|>]];
-  res = DeleteCases[
-    Quiet@Map[numericRelHolds[rel, before /. #, after /. #, tol] &, pts],
-    Indeterminate];
+  evals = DeleteCases[
+    Quiet@Map[{#, numericRelHolds[rel, before /. #, after /. #, tol]} &, pts],
+    {_, Indeterminate}];
+  res = evals[[All, 2]];
   Which[
     res === {},          <|"verdict" -> Unknown, "trials" -> 0, "passed" -> 0|>,
-    MemberQ[res, False], <|"verdict" -> False, "trials" -> Length[res], "passed" -> Count[res, True]|>,
+    MemberQ[res, False],
+      bad = FirstCase[evals, {pt_, False} :> pt];
+      <|"verdict" -> False, "trials" -> Length[res], "passed" -> Count[res, True],
+        "witness" -> <|"point" -> bad, "before" -> Quiet@N[before /. bad], "after" -> Quiet@N[after /. bad]|>|>,
     True,                <|"verdict" -> True,  "trials" -> Length[res], "passed" -> Length[res]|>
   ]
 ];
@@ -202,8 +212,16 @@ conjoinAsm[a_, b_] := With[
 contradictoryQ[True] := False;
 contradictoryQ[asm_] := TrueQ@Quiet@TimeConstrained[Reduce[asm, Reals] === False, 3, False];
 
-step::refuted = "Step `1` failed verification (status: Refuted). Recorded anyway.";
+step::refuted = "Step `1` failed verification (status: Refuted).`2` Recorded anyway.";
+step::noop = "The transform left the expression unchanged (a rewrite whose left side matched nothing?); no step recorded.";
 step::contradiction = "Step `1` introduces assumptions `2` that contradict those already in force; rejected.";
+
+(* the numeric counterexample, if the probe found one, as message text *)
+witnessText[cert_] := With[{w = Lookup[Lookup[cert, "numeric", <||>], "witness", None]},
+  If[! AssociationQ[w], "",
+    " Counterexample at " <> ToString[w["point"], InputForm] <>
+    ": before = " <> ToString[w["before"], InputForm] <>
+    ", after = " <> ToString[w["after"], InputForm] <> "."]];
 
 stepCore[d : Derivation[a_], f_, noteOpt_] := Module[
   {cur = result[d], asm = assumptionsOf[d], new, rel, ynote, meta, note, cert, rec,
@@ -218,6 +236,11 @@ stepCore[d : Derivation[a_], f_, noteOpt_] := Module[
                       "assumptions" -> asm, "defs" -> defs|>],
       f[cur]]];
   note = If[noteOpt === Automatic, ynote, noteOpt];
+  (* honesty guard: a transform that did nothing (and introduced nothing) must
+     not add a verified-looking line to the chain *)
+  If[new === cur && rel === Equal && Lookup[meta, "conditions", True] === True &&
+     Lookup[meta, "define", Nothing] === Nothing && ! TrueQ[Lookup[meta, "assumed", False]],
+    Message[step::noop]; Return[d]];
   conds = normalizeAsm[Lookup[meta, "conditions", True]];
   assumed = TrueQ@Lookup[meta, "assumed", False];
   newAsm = conjoinAsm[asm, conds];
@@ -232,7 +255,7 @@ stepCore[d : Derivation[a_], f_, noteOpt_] := Module[
   (* verify on the DEFINITION-EXPANDED expressions, so abbreviations are transparent *)
   cert = certify[cur //. newDefs, new //. newDefs, rel, newAsm, grading, order, relations];
   If[assumed, cert = <|cert, "status" -> "Asserted"|>];   (* taken as given *)
-  If[cert["status"] === "Refuted", Message[step::refuted, n]];
+  If[cert["status"] === "Refuted", Message[step::refuted, n, witnessText[cert]]];
   rec = <|"result" -> new, "relation" -> rel, "note" -> note, "cert" -> cert|>;
   Derivation[<|a, "assumptions" -> newAsm, "defs" -> newDefs, "steps" -> Append[a["steps"], rec]|>]
 ];

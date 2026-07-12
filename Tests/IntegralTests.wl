@@ -69,4 +69,15 @@ test["sum pulled outside integral",
   ! FreeQ[result[dSwap], Inactive[Sum][Inactive[Integrate][__], _]]];
 test["swapSumIntegral verified", verifiedQ[dSwap]];
 
+(* ============================================================ *)
+section["ibp at infinite limits & assumption-aware evaluate"];
+dWat = derive[dint[E^(-uu t)/(1 + t), {t, 0, Infinity}], Assumptions -> uu > 1] //
+       step[ibp[1/(1 + t)]];
+test["ibp boundary at Infinity is a clean limit",
+  MatchQ[result[dWat], 1/uu - Inactive[Integrate][__]]];
+test["ibp at Infinity verified", verifiedQ[dWat]];
+dEv = derive[dint[E^(-uu t), {t, 0, Infinity}], Assumptions -> uu > 1] // step[evaluate];
+test["evaluate uses the chain's assumptions (no ConditionalExpression)",
+  FreeQ[result[dEv], ConditionalExpression] && result[dEv] === 1/uu];
+
 endSuite[];

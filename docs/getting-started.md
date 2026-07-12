@@ -83,10 +83,37 @@ caveats[goal[]]     (* anything taken on faith (claims / unverified)   *)
 The `Derivation` panel *is* the proof — keep it as the cell output and it's a
 self-contained, checkable record.
 
+## Searching for a derivation
+
+Most real sessions are a *search*: you don't know step 5 until step 4 renders.
+The loop — look, recall a move, try it, see what changed, often retract — is
+what the tactic layer is built around:
+
+- **An illegal move is refused.** If a `by[...]` step is *refuted*, the goal
+  stays where it was (like an illegal move in a proof assistant) and the message
+  shows a numeric counterexample — the sample point and both values.
+- **A move that did nothing records nothing.** A rewrite whose left side matched
+  nothing (a typo, a wrong locator) is reported, not silently logged as a
+  verified line.
+- **`moves[]`** lists the transforms that apply to the current goal's shape —
+  "I'm looking at a held integral, what can I do to it?"
+- **`changed[]`** shows the current line with the parts that differ from the
+  previous one highlighted — "what did that step actually do?"
+- **`assuming[x >= 0]`** adds an assumption you only realized you needed
+  mid-derivation (it affects later steps; contradictions are rejected).
+
 ## Entering integrals and sums
 
-Write held (unevaluated) integrals/sums with the short constructors — or type the
-inactive `∫` / `∑` directly with Mathematica's 2-D input:
+Ordinary mathematical input just works — `compute` holds its argument and keeps
+live `Integrate`/`Sum`/`Product` inert instead of letting them evaluate away:
+
+```mathematica
+compute[Integrate[E^(-u t)/(1 + t), {t, 0, Infinity}], Assumptions -> u > 1]
+```
+
+Or write the held forms explicitly with the short constructors (also the form to
+use *inside* rewrite rules), or type the inactive `∫` / `∑` with Mathematica's
+2-D input:
 
 ```mathematica
 dint[f, {x, a, b}]    (* a definite integral, kept inert *)
